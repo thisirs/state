@@ -81,8 +81,8 @@ is not recognized by any of the states defined in
 
 It is a list and each element is of the form (ID . SETTINGS)
 where SETTINGS is a list of setting. A setting is of the
-form (SETTING . ELT) where SETTING is one of the symbols `name',
-`key', `state-p' or `switch'.")
+form (SETTING . ELT) where SETTING is one of the symbols `key',
+`state-p' or `switch'.")
 
 (defvar state-from-id ()
   "Alist that stores for each state, the previous state.")
