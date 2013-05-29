@@ -187,6 +187,8 @@ extra key binding corresponding to the default case."
   (dolist (settings state-alist)
     (let ((id (car settings))
           (key (cdr (assoc 'key (cdr settings)))))
+      (if (get-register id)
+          (setcdr (get-register id) nil))
       (define-key state-map key (state--change-state id))))
   (define-key state-map "o" (state--change-state 'default)))
 
