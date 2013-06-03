@@ -48,8 +48,8 @@ is not recognized by any of the states defined in
 
 (defvar state-alist
   '((emacs
-     ((key . "e")
-      (switch . "~/.emacs.d/init.el")))
+     (key . "e")
+     (switch . "~/.emacs.d/init.el"))
     (gnus
      (key . "g")
      (state-p . (memq major-mode
