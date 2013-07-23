@@ -99,19 +99,6 @@ form (SETTING . ELT) where SETTING is one of the symbols `key',
      (delete-other-windows)
      (window-configuration-to-register ,id)))
 
-(defmacro wconf (id &rest body)
-  `(lambda (,id)
-     (if (and (consp (get-register ,id))
-              (window-configuration-p (car (get-register ,id))))
-         (condition-case nil
-             (jump-to-register ,id)
-           (error
-            ,@body
-            (delete-other-windows)))
-       ,@body
-       (delete-other-windows)
-       (window-configuration-to-register ,id))))
-
 (defun state-buffer-p (file-name-or-buffer-name)
   "Return non-nil if current buffer is visiting or named
 FILE-NAME-OR-BUFFER-NAME."
