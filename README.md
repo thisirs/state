@@ -4,11 +4,14 @@ This library allows you to switch back and forth between predefined
 workspaces. For example, pressing <kbd>s-s g</kbd> switches to `gnus`
 in fullscreen. When you are done with `gnus` your can switch back to
 where you were by pressing the same keystroke or <kbd>s-s o</kbd>.
+Similarly, you can take a quick peek at your `*Messages*` buffer by
+pressing <kbd>s-s m</kbd> and return to where you were by pressing the
+same keystroke.
 
 ## Installation
 
 Make sure the file `state.el` is in your load path and put the
-following in your .emacs:
+following in your `.emacs`:
 ```lisp
 (require 'state)
 (state-install-bindings)
