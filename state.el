@@ -180,6 +180,7 @@ a buffer name to which we switch."
          (push (cons ',id id-from) state-from-id)
          (state-switch-to-state ',id)))))
 
+;;;###autoload
 (defun state-install-bindings ()
   "Install key bindings as specified in `state-alist'. Add an
 extra key binding corresponding to the default case."
