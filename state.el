@@ -84,7 +84,7 @@ where SETTINGS is a list of setting. A setting is of the
 form (SETTING . ELT) where SETTING is one of the symbols `key',
 `state-p' or `switch'.")
 
-(defvar state-from-id ()
+(defvar state-from-id nil
   "Alist that stores for each state, the previous state.")
 
 (defmacro wconf-fullscreen (id &rest body)
