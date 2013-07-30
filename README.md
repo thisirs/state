@@ -1,4 +1,4 @@
-# State.el
+# state
 
 This library allows you to switch back and forth between predefined
 workspaces. For example, pressing <kbd>s-s g</kbd> switches to `gnus`

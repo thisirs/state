@@ -23,6 +23,12 @@
 ;; This library allows you to switch back and forth between predefined
 ;; workspaces. See the README file for more information.
 
+;;; Installation:
+
+(require 'state)
+
+;; See documentation on https://github.com/thisirs/state#state
+
 ;;; Code:
 
 (defvar state-prefix-key "s-s"
