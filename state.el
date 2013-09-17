@@ -25,7 +25,7 @@
 
 ;;; Installation:
 
-(require 'state)
+;; (require 'state)
 
 ;; See documentation on https://github.com/thisirs/state#state
 
