@@ -3,10 +3,9 @@
 This library allows you to switch back and forth between predefined
 workspaces. For example, pressing <kbd>s-s g</kbd> switches to `gnus`
 in fullscreen. When you are done with `gnus` your can switch back to
-where you were by pressing the same keystroke or <kbd>s-s o</kbd>.
-Similarly, you can take a quick peek at your `*Messages*` buffer by
-pressing <kbd>s-s m</kbd> and return to where you were by pressing the
-same keystroke.
+where you were by pressing the same keystroke. Similarly, you can take
+a quick peek at your `*Messages*` buffer by pressing <kbd>s-s m</kbd>
+and return to where you were by pressing the same keystroke.
 
 ## Installation
 
@@ -14,55 +13,105 @@ Make sure the file `state.el` is in your load path and put the
 following in your `.emacs`:
 ```lisp
 (require 'state)
-(state-install-bindings)
+(state-global-mode 1)
 ```
 
-## Customizations
+## Simple buffer switching
 
-The workspaces are listed in the variable `state-alist`. The simplest
-way to specify a workspace is to define, for example:
+To define a new state, you need to use the macro `state-define-state`.
+The simplest switch is a switch to a buffer. For example the
+`*Messages*` buffer:
 ```lisp
-(emacs
- ((key . "e")
-  (switch . "~/.emacs.d/init.el")))
+(state-define-state
+ message
+ :key "m"
+ :switch "*Messages*")
 ```
-In this case, pressing <kbd>s-s e</kbd> switches to your `init.el` as
-if you were opening it with `find-file` and pressing <kbd>s-s e</kbd> once
-again brings you back.
+The first argument to `state-define-state` is a unique symbol
+identifying the state. The rest is a property list. For a simple
+buffer switching state we have to specify the key to press to switch
+to that buffer and the name of the buffer we want to switch to. We
+could have specified the path of a file as well. Pressing <kbd>s-s
+m</kbd> switches to the `*Messages*` buffer. Pressing it again
+switches back to where you were.
 
-In the case your workspace is not a simple file, you can specify it
-with the `state-p` keyword. For example, the `gnus` workspace mentioned
-earlier is defined as follows:
+## General case
+
+If your workspace is not a simple file or if you want a different
+behaviour when switching to it, you have to specify yourself several
+properties.
+- The `:in` property is used to charaterize the state and
+should return a non-nil value if we are currently in this workspace
+and nil otherwise.
+- The `:exist` property tells if the workspace has been created. We no
+  longer need to call the create property.
+- The `:create` property is used to create your workspace if it does
+  not exist already. For example, if there is no `gnus` buffer for the
+  `gnus` state.
+- The `:switch` property is performing the actual switch.
+- The `:bound` property is used to make a state only accessible from
+another state. It is useful for example to have dedicated terminal
+buffer for a project.
+
+## Examples
+
+A simple switch to the `*scratch*` buffer:
 ```lisp
-(gnus
- (key . "g")
- (state-p . (memq major-mode
-                  '(message-mode
-                    gnus-group-mode
-                    gnus-summary-mode
-                    gnus-article-mode)))
-(switch . (wconf-fullscreen 'gnus (gnus))))
+(state-define-state
+ scratch
+ :key "s"
+ :switch "*scratch*")
 ```
-`state-p` is a function or a form indicating when we are in `gnus`.
-The `switch` keyword specifies a function or a form that performs the
-switch. In this case, we use a helper function that stores the window
-configuration for us and make sure we are in fullscreen after switching.
-
-## License
-
-Copyright (C) 2013 Sylvain Rousseau <thisirs at gmail dot com>
-
-Author: Sylvain Rousseau <thisirs at gmail dot com>
-
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
+to my timeline with `twittering-mode`:
+```lisp
+(state-define-state
+ twit
+ :key "t"
+ :in (and (require 'twittering-mode nil t) (twittering-buffer-p))
+ :switch twit)
+```
+Switching to my `init-*.el` files:
+```lisp
+(state-define-state
+ emacs
+ :key "e"
+ :in "~/.emacs.d/init"
+ :create (find-file "~/.emacs.d/init.el"))
+```
+Switching to a terminal dedicated to the `emacs` state:
+```lisp
+(state-define-state
+ emacs-term
+ :key "z"
+ :bound emacs
+ :exist (get-buffer "*ansi-term (dotemacs)*")
+ :in (equal (buffer-name) "*ansi-term (dotemacs)*")
+ :switch (if (get-buffer-window "*ansi-term (dotemacs)*")
+             (select-window (get-buffer-window "*ansi-term (dotemacs)*"))
+           (switch-to-buffer-other-window "*ansi-term (dotemacs)*"))
+ :create (ansi-term "/bin/zsh" "ansi-term (dotemacs)"))
+```
+Switching to a general purpose terminal:
+```lisp
+(state-define-state
+ term
+ :key "z"
+ :exist (get-buffer "*ansi-term*")
+ :in (equal (buffer-name) "*ansi-term*")
+ :switch (if (get-buffer-window "*ansi-term*")
+             (select-window (get-buffer-window "*ansi-term*"))
+           (switch-to-buffer-other-window "*ansi-term*"))
+ :create (ansi-term "/bin/zsh"))
+```
+Switching to `gnus`:
+```lisp
+(state-define-state
+ gnus
+ :key "g"
+ :in (memq major-mode
+           '(message-mode
+             gnus-group-mode
+             gnus-summary-mode
+             gnus-article-mode))
+ :create gnus)
+```
