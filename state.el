@@ -269,6 +269,7 @@ If not found, return the default state `state--default-state'."
   state-mode
   state-on)
 
+;;;###autoload
 (defun state-on ()
   "Enable State minor mode."
   (state-mode 1))
