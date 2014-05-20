@@ -44,16 +44,26 @@
   "Keymap for state mode.")
 
 (defstruct state
+  ;; Symbol identifying the state
   name
+  ;; Key used to switch to this state
   key
+  ;; Form that performs the switch
   switch
+  ;; Form that tells if the state is existing
   exist
+  ;; Form to create the state
   create
+  ;; Form that retuns true if we are in this state
   in
+  ;; If non-nil, this state is bound to another
   bound
-  before ;; Action to perform before switching to another state
-  origin ;; Store state symbol name we are coming from
-  current ;; Data used to restore this state; usually a wconf
+  ;; Action to perform before switching to another state
+  before
+  ;; Store state symbol name we are coming from
+  origin
+  ;; Data used to restore this state; usually a wconf
+  current
   )
 
 (defvar state--states nil
