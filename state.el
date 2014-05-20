@@ -85,7 +85,7 @@
 If PRED-OR-VALUE is an atom, check slot's value with `equal'.
 Otherwise, call it with slot's value as first argument."
   (unless (memq slot (mapcar #'car (get 'state 'cl-struct-slots)))
-    (error "Unkown slot name %s" slot))
+    (error "Unknown slot name %s" slot))
   (let ((predicate (if (atom pred-or-value)
                        (lambda (v) (equal pred-or-value v))
                      pred-or-value))
