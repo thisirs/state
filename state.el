@@ -97,7 +97,8 @@ Otherwise, call it with slot's value as first argument."
 
 (defun state--get-state-by-name (name)
   "Return a state object with name NAME found in `state--states'.
-If not found, return the default state `state--default-state'."
+If not found or if NAME is equal to 'default, return the default
+state `state--default-state'."
   (if (eq name 'default)
       state--default-state
     (let ((states state--states) state found)
