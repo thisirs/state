@@ -147,11 +147,20 @@ state `state--default-state'."
           (let ((origin (state-origin from)))
             (if (not origin)
                 (user-error "Not coming from anywhere")
-              (state-call (state--get-state-by-name origin) 'switch)
-              (message "Back to state %s" origin))))
+              (let ((wconf (state-current (state--get-state-by-name origin))))
+                (if (not (window-configuration-p wconf))
+                    (user-error "No wconf stored for state %s" origin)
+                  (set-window-configuration wconf)
+                  (message "Back to state %s" origin))))))
       ;; Not switching back but switching to, so save original state
       (setf (state-origin to) from-name)
+
+      ;; Save current wonf to restore it if we switch back
+      (setf (state-current from) (current-window-configuration))
+
+      ;; Executes any other user defined "before" form
       (state-call from 'before)
+
       (if (state-call to 'exist)
           (progn
             (state-call to 'switch)
