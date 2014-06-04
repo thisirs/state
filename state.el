@@ -113,11 +113,12 @@ state `state--default-state'."
                 (not (state-call state 'in))))
     (or state state--default-state)))
 
-(defun state-call (state slot)
-  "Call or eval the value of slot SLOT in state STATE."
+(defun state-call (state slot &rest args)
+  "Call or eval the value of slot SLOT in state STATE. Call with
+ARGS if supplied."
   (let ((value (funcall (intern (format "state-%s" slot)) state)))
     (if (functionp value)
-        (funcall value)
+        (apply value args)
       (eval value))))
 
 (defun state--do-switch (key)
