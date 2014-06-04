@@ -1,4 +1,4 @@
-;;; state.el --- Quick navigation between workspaces
+;;; state.el --- Quick navigation between workspaces  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2013-2014 Sylvain Rousseau <thisirs at gmail dot com>
 
@@ -172,9 +172,19 @@ ARGS if supplied."
             (state-call to 'before))
         (state-call to 'create)
         (unless (state-call to 'in)
-          (state-call to 'switch)
-          (state-call to 'before)))
-      (message "Switched to state %s" (state-name to)))))
+          (state-call to 'switch))
+        (state-call to 'before))
+      (message "Switched to state %s" (state-name to))
+
+      ;; If keep in non-nil install transient keymap
+      (if (state-keep to)
+          (set-transient-map
+           (let ((map (make-sparse-keymap)))
+             (define-key map (kbd key)
+               (lambda ()
+                 (interactive)
+                 (state-call to 'keep to)))
+             map) t)))))
 
 ;;;###autoload
 (defmacro state-define-state (name &rest args)
