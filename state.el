@@ -58,6 +58,8 @@
   in
   ;; If non-nil, this state is bound to another
   bound
+  ;; What to do when we keep pressing the key after switching
+  keep
   ;; Action to perform before switching to another state
   before
   ;; Store state symbol name we are coming from
@@ -184,12 +186,14 @@ ARGS if supplied."
         (in (plist-get args :in))
         (bound (plist-get args :bound))
         (exist (plist-get args :exist))
+        (keep (plist-get args :keep))
         (override (plist-get args :override))
         (create (plist-get args :create)))
 
     (setf (state-name state) name)
     (setf (state-key state) key)
     (setf (state-bound state) bound)
+    (setf (state-keep state) keep)
 
     ;; If the create property is nil, infer one base on switch or in
     ;; properties if they are strings. Otherwise leave nil; switch
