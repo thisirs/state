@@ -137,9 +137,11 @@ ARGS if supplied."
                         (state--filter state--states 'key key)
                         'bound
                         (lambda (v) (not v))))))
-         (to (if (= 1 (length states))
-                 (car states)
-               (completing-read)))
+         (to (if (not states)
+                 (error "Non-existent state")
+               (if (= 1 (length states))
+                   (car states)
+                 (completing-read))))
          (to-name (state-name to)))
     ;; Test if we are switching back
     (if (eq to-name from-name)
