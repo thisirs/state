@@ -32,6 +32,9 @@
 
 ;;; Code:
 
+(eval-and-compile
+  (require 'cl-lib))
+
 (defvar state-keymap-prefix (kbd "s-s")
   "The prefix command for state's keymap.")
 
@@ -104,7 +107,7 @@ If not found or if NAME is equal to 'default, return the default
 state `state--default-state'."
   (if (eq name 'default)
       state--default-state
-    (let ((states state--states) state found)
+    (let ((states state--states) state)
       (while (and (setq state (pop states))
                   (not (eq name (state-name state)))))
       state)))
@@ -198,7 +201,6 @@ ARGS if supplied."
         (bound (plist-get args :bound))
         (exist (plist-get args :exist))
         (keep (plist-get args :keep))
-        (override (plist-get args :override))
         (create (plist-get args :create)))
 
     (setf (state-name state) name)
