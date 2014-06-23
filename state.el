@@ -147,7 +147,10 @@ ARGS if supplied."
                  (error "Non-existent state")
                (if (= 1 (length states))
                    (car states)
-                 (error "State with same key not currently implemented"))))
+                 (state--get-state-by-name
+                  (intern
+                   (completing-read "Choose state: "
+                                    (mapcar (lambda (s) (cons (state-name s) s)) states) nil t))))))
          (to-name (state-name to)))
     ;; Test if we are switching back
     (if (eq to-name from-name)
