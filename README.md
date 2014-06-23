@@ -115,3 +115,28 @@ Switching to `gnus`:
              gnus-article-mode))
  :create gnus)
 ```
+For ERC users, switching to ERC and cycling through ERC buffers by
+pressing "i" repeatedly:
+```lisp
+(state-define-state
+ erc
+ :key "i"
+ :in (memq (current-buffer)
+           (erc-buffer-list))
+ :switch (erc-start-or-switch 1)
+ :keep (erc-track-switch-buffer 0))
+```
+with `erc-start-or-switch` being
+```lisp
+(defun erc-start-or-switch (arg)
+  "Connect to ERC, or switch to last active buffer"
+  (interactive "P")
+  (if (and (get-buffer "irc.freenode.net:6667")
+           (erc-server-process-alive (get-buffer "irc.freenode.net:6667")))
+      (erc-track-switch-buffer 1)
+    (when (or arg (y-or-n-p "Start ERC? "))
+      (erc :server "irc.freenode.net"
+           :port 6667
+           :nick "thisirs"
+           :password (secrets-get-secret "Default" "NickServ")))))
+```
