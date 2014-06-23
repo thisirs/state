@@ -147,7 +147,7 @@ ARGS if supplied."
                  (error "Non-existent state")
                (if (= 1 (length states))
                    (car states)
-                 (completing-read))))
+                 (error "State with same key not currently implemented"))))
          (to-name (state-name to)))
     ;; Test if we are switching back
     (if (eq to-name from-name)
