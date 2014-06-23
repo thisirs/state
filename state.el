@@ -1,4 +1,4 @@
-;;; state.el --- Quick navigation between workspaces
+;;; state.el --- Quick navigation between workspaces  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2013-2014 Sylvain Rousseau <thisirs at gmail dot com>
 
