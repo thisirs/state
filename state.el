@@ -88,8 +88,8 @@
 (defun state--filter (collection slot pred-or-value)
   "Return all states found in COLLECTION with SLOT's value satisfying PRED-OR-VALUE.
 
-If PRED-OR-VALUE is an atom, check slot's value with `equal'.
-Otherwise, call it with slot's value as first argument."
+If PRED-OR-VALUE is a function, call it with slot's value as
+first argument. Otherwise, compare slot's value with `equal'."
   (unless (memq slot (mapcar #'car (get 'state 'cl-struct-slots)))
     (error "Unknown slot name %s" slot))
   (let ((predicate (if (functionp pred-or-value)
