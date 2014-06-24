@@ -32,7 +32,7 @@
 
 ;;; Code:
 
-(eval-and-compile
+(eval-when-compile
   (require 'cl-lib))
 
 (defvar state-keymap-prefix (kbd "s-s")
@@ -47,7 +47,7 @@
     map)
   "Keymap for state mode.")
 
-(defstruct state
+(cl-defstruct state
   ;; Symbol identifying the state
   name
   ;; Key used to switch to this state
