@@ -138,7 +138,12 @@ ARGS if supplied."
                    (or (state--filter
                         (state--filter state--states 'key key)
                         'bound
-                        (lambda (v) (eq v from-name)))
+                        (lambda (v)
+                          (if (symbolp v)
+                              (eq v from-name)
+                            (if (functionp v)
+                                (funcall v)
+                              (eval v)))))
                        (state--filter
                         (state--filter state--states 'key key)
                         'bound
