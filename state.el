@@ -132,6 +132,28 @@ ARGS if supplied."
         (apply value args)
       (eval value))))
 
+(defun state--select-states (key from-name)
+  "Select states from `states--states' that have the key KEY"
+  (let* ((states (state--filter state--states 'key key))
+         (unbound (state--filter states 'bound 'not))
+         (bound (state--filter states 'bound
+                               (lambda (v)
+                                 (if (symbolp v)
+                                     (eq v from-name)
+                                   (if (functionp v)
+                                       (funcall v)
+                                     (eval v)))))))
+    (if bound
+        (let (bound-min state min)
+          (while (setq state (pop bound))
+            (if (eq min (state-priority state))
+                (push state bound-min)
+              (when (and (not min) (< (state-priority state) min))
+                (setq min (state-priority state))
+                (setq bound-min (list state)))))
+          bound-min)
+      unbound)))
+
 (defun state--do-switch (key)
   "Perform the switch process when KEY is pressed."
   (let* ((from (state--get-state-in))
@@ -140,19 +162,7 @@ ARGS if supplied."
          ;; is the state we want to switch to (ie switch back)
          (states (if (equal key (state-key from))
                      (list from)
-                   (or (state--filter
-                        (state--filter state--states 'key key)
-                        'bound
-                        (lambda (v)
-                          (if (symbolp v)
-                              (eq v from-name)
-                            (if (functionp v)
-                                (funcall v)
-                              (eval v)))))
-                       (state--filter
-                        (state--filter state--states 'key key)
-                        'bound
-                        (lambda (v) (not v))))))
+                   (state--select-states key from-name)))
          (to (if (not states)
                  (error "Non-existent state")
                (if (= 1 (length states))
@@ -212,12 +222,14 @@ ARGS if supplied."
         (before (plist-get args :before))
         (in (plist-get args :in))
         (bound (plist-get args :bound))
+        (priority (plist-get args :priority))
         (exist (plist-get args :exist))
         (keep (plist-get args :keep))
         (create (plist-get args :create)))
 
     (setf (state-name state) name)
     (setf (state-key state) key)
+    (setf (state-priority state) priority)
     (setf (state-bound state) bound)
     (setf (state-keep state) keep)
 
