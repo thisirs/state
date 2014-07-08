@@ -48,29 +48,34 @@
   "Keymap for state mode.")
 
 (cl-defstruct state
-  ;; Symbol identifying the state
-  name
-  ;; Key used to switch to this state
-  key
-  ;; Form that performs the switch
-  switch
-  ;; Form that tells if the state is existing
-  exist
-  ;; Form to create the state
-  create
-  ;; Form that retuns true if we are in this state
-  in
-  ;; If non-nil, this state is bound to another
-  bound
-  ;; What to do when we keep pressing the key after switching
-  keep
-  ;; Action to perform before switching to another state
-  before
-  ;; Store state symbol name we are coming from
-  origin
-  ;; Data used to restore this state; usually a wconf
-  current
-  )
+  "Structure representing a state.
+Slots:
+
+`name'
+    Symbol identifying the state.
+`key'
+    Key used to switch to this state.
+`switch'
+    Form that performs the switch.
+`exist'
+    Form that tells if the state is existing.
+`create'
+    Form to create the state.
+`in'
+    Form that returns true if we are in this state.
+`bound'
+    If non-nil, this state is accessible only from another state.
+`priority'
+    Priority of state if there is more than one we want to switch to.
+`keep'
+    What to do when we keep pressing the key after switching.
+`before'
+    Action to perform before switching to another state.
+`origin'
+    Store state symbol name we are coming from.
+`current'
+    Data used to restore this state; usually a wconf."
+  name key switch exist create in bound priority keep before origin current)
 
 (defvar state--states nil
   "List of all defined states.")
