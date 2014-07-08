@@ -282,32 +282,35 @@ ARGS if supplied."
 
     ;; Rewrite switch property if it is a string or if in is a string
     (setf (state-switch state)
-          (if (stringp in)
+          (if switch
+              (if (stringp switch)
+                  (if (file-name-absolute-p switch)
+                      `(find-file-existing ,switch)
+                    `(if current-prefix-arg
+                         (switch-to-buffer-other-window ,switch)
+                       (switch-to-buffer ,switch)))
+                switch)
+            (if (stringp in)
+                `(let ((state (state--get-state-by-name ',name)))
+                   (if (window-configuration-p (state-current state))
+                       (set-window-configuration (state-current state))
+                     (switch-to-buffer
+                      (or
+                       (catch 'found
+                         (progn
+                           (mapc (lambda (buf)
+                                   (if (string-prefix-p
+                                        (file-truename ,in)
+                                        (file-truename
+                                         (with-current-buffer buf
+                                           (or (buffer-file-name) default-directory "/"))))
+                                       (throw 'found buf)))
+                                 (buffer-list))
+                           nil))
+                       (error "Unable to switch to state %s" ',name)))))
               `(let ((state (state--get-state-by-name ',name)))
                  (if (window-configuration-p (state-current state))
-                     (set-window-configuration (state-current state))
-                   (switch-to-buffer
-                    (or
-                     (catch 'found
-                       (progn
-                         (mapc (lambda (buf)
-                                 (if (string-prefix-p
-                                      (file-truename ,in)
-                                      (file-truename
-                                       (with-current-buffer buf
-                                         (or (buffer-file-name) default-directory "/"))))
-                                     (throw 'found buf)))
-                               (buffer-list))
-                         nil))
-                     (error "Unable to switch to state %s" ',name)))))
-            (if (stringp switch)
-                (if (file-name-absolute-p switch)
-                    `(find-file-existing ,switch)
-                  `(switch-to-buffer ,switch))
-              (or switch
-                  `(let ((state (state--get-state-by-name ',name)))
-                     (if (window-configuration-p (state-current state))
-                         (set-window-configuration (state-current state))))))))
+                     (set-window-configuration (state-current state)))))))
 
     ;; By default, before switching, store the current window
     ;; configuration in the slot curent.
