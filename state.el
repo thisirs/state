@@ -228,7 +228,9 @@ ARGS if supplied."
         (create (plist-get args :create)))
 
     (setf (state-name state) name)
-    (setf (state-key state) key)
+    (if key
+        (setf (state-key state) key)
+      (error "No property key defined"))
     (setf (state-priority state) priority)
     (setf (state-bound state) bound)
     (setf (state-keep state) keep)
