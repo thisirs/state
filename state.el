@@ -287,7 +287,10 @@ ARGS if supplied."
           (if switch
               (if (stringp switch)
                   (if (file-name-absolute-p switch)
-                      `(find-file-existing ,switch)
+                      `(if current-prefix-arg
+                           (switch-to-buffer-other-window
+                            (find-file-noselect ,switch))
+                         (find-file-existing ,switch))
                     `(if current-prefix-arg
                          (switch-to-buffer-other-window ,switch)
                        (switch-to-buffer ,switch)))
