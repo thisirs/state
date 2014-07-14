@@ -243,12 +243,12 @@ ARGS if supplied."
           (or create
               (if (stringp switch)
                   (if (file-name-absolute-p switch)
-                      `(find-file-existing ,switch)
-                    `(get-buffer-create "*scratch*"))
+                      `(find-file-noselect ,switch)
+                    `(get-buffer-create ,switch))
                 (if (stringp in)
                     (if (file-directory-p in)
-                        `(dired ,in)
-                      `(find-file-existing ,in))))))
+                        `(dired-noselect ,in)
+                      `(find-file-noselect ,in))))))
 
     ;; Rewrite in property if it is a string or if switch is a string
     (setf (state-in state)
