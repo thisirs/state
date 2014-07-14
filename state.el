@@ -108,8 +108,8 @@ first argument. Otherwise, compare slot's value with `equal'."
 
 (defun state--get-state-by-name (name)
   "Return a state object with name NAME found in `state--states'.
-If not found or if NAME is equal to 'default, return the default
-state `state--default-state'."
+If NAME is equal to `default', return the default state
+`state--default-state', nil otherwise."
   (if (eq name 'default)
       state--default-state
     (let ((states state--states) state)
