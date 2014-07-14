@@ -299,20 +299,23 @@ ARGS if supplied."
                 `(let ((state (state--get-state-by-name ',name)))
                    (if (window-configuration-p (state-current state))
                        (set-window-configuration (state-current state))
-                     (switch-to-buffer
-                      (or
-                       (catch 'found
-                         (progn
-                           (mapc (lambda (buf)
-                                   (if (string-prefix-p
-                                        (file-truename ,in)
-                                        (file-truename
-                                         (with-current-buffer buf
-                                           (or (buffer-file-name) default-directory "/"))))
-                                       (throw 'found buf)))
-                                 (buffer-list))
-                           nil))
-                       (error "Unable to switch to state %s" ',name)))))
+                     (let ((buffer (or
+                                    (catch 'found
+                                      (progn
+                                        (mapc (lambda (buf)
+                                                (if (string-prefix-p
+                                                     (file-truename ,in)
+                                                     (file-truename
+                                                      (with-current-buffer buf
+                                                        (or (buffer-file-name) default-directory "/"))))
+                                                    (throw 'found buf)))
+                                              (buffer-list))
+                                        nil))
+                                    (and (file-directory-p ,in)
+                                         (dired-noselect ,in))
+                                    (error "Unable to switch to state %s" ',name))))
+                       (delete-other-windows)
+                       (switch-to-buffer buffer))))
               `(let ((state (state--get-state-by-name ',name)))
                  (if (window-configuration-p (state-current state))
                      (set-window-configuration (state-current state)))))))
