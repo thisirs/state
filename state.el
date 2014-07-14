@@ -215,7 +215,48 @@ ARGS if supplied."
 
 ;;;###autoload
 (defmacro state-define-state (name &rest args)
-  "Define a new state named NAME with property list ARGS."
+  "Define a new state named NAME with property list ARGS.
+
+:name Symbol representing the state.
+
+:key String of length 1 used as a key in keymap `state-mode-map'
+to switch to the state.
+
+:in Field that is used to say if emacs currently displays the
+state. If it is a string, return non-nil if current buffer is
+visiting a file that is an ancestor of that string. If it is a
+form or function, call it.
+
+:switch Field that is used to perform the actual switch. It is
+called if it is a function or a form. If it is a valid path,
+switch to a buffer visiting that file or switch to the buffer
+with that name. If that field is not specified, infer a suitable
+one if :in is a string.
+
+:exist Function or form called to say if the state exists. Some
+states might require a set up when first called. :exist is used
+to say if that set up has already been made.
+
+:create Function or form called to create the state. It is linked
+to the :exist property. When the state does not exists, :create
+is called.
+
+:before Function or form called just before switching. It allows
+the current state to save its state. By default, it saves the
+current windows configuration.
+
+:bound Field saying if the current state should only be
+accessible from another state. It is the name of another state or
+a form to be called.
+
+:priority A number indicating the priority of a state when
+several states hold the same key. The state with the lowest
+priority is preferred. If several states have the same lowest
+priority, ask the user to choose. By convention, nil is of
+infinite priority.
+
+:keep A form or function that is called if we keep pressing the
+key after switching. Leave nil is you don't want this feature."
   (let ((state (or (state--get-state-by-name name) (make-state)))
         (key (plist-get args :key))
         (switch (plist-get args :switch))
