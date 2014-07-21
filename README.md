@@ -140,3 +140,26 @@ with `erc-start-or-switch` being
            :nick "thisirs"
            :password (secrets-get-secret "Default" "NickServ")))))
 ```
+A context-aware switch to associated repl. Pressing <kbd>s-s j</kbd>
+in an emacs-lisp file switches to `ielm'. Same for `MATLAB', `python'
+and `ruby' files.
+```lisp
+(defmacro state-define-repl (name key buffer-name from create)
+  `(state-define-state
+    ,name
+    :bound ,from
+    :key ,key
+    :exist (get-buffer ,buffer-name)
+    :in (equal (buffer-name) ,buffer-name)
+    :switch (if (get-buffer-window ,buffer-name)
+                (select-window (get-buffer-window ,buffer-name))
+              (switch-to-buffer-other-window ,buffer-name))
+    :create (progn
+              (switch-to-buffer-other-window (current-buffer))
+              ,create)))
+
+(state-define-repl elisp-repl "j" "*ielm*" (eq major-mode 'emacs-lisp-mode) (ielm))
+(state-define-repl matlab-repl "j" "*MATLAB*" (eq major-mode 'matlab-mode) (matlab-shell))
+(state-define-repl python-repl "j" "*Python*" (eq major-mode 'python-mode) (run-python "/usr/bin/python2.7"))
+(state-define-repl ruby-repl "j" "*ruby*" (eq major-mode 'ruby-mode) (inf-ruby))
+```
