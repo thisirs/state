@@ -55,14 +55,15 @@ buffer for a project.
 
 ## Examples
 
-A simple switch to the `*scratch*` buffer:
+Some examples taken from my [emacs configuration](https://github.com/thisirs/dotemacs):
+- A simple switch to the `*scratch*` buffer:
 ```lisp
 (state-define-state
  scratch
  :key "s"
  :switch "*scratch*")
 ```
-to my timeline with `twittering-mode`:
+- To my timeline with `twittering-mode`:
 ```lisp
 (state-define-state
  twit
@@ -70,7 +71,7 @@ to my timeline with `twittering-mode`:
  :in (and (require 'twittering-mode nil t) (twittering-buffer-p))
  :switch twit)
 ```
-Switching to my `init-*.el` files:
+- Switching to my `init-*.el` files:
 ```lisp
 (state-define-state
  emacs
@@ -78,7 +79,7 @@ Switching to my `init-*.el` files:
  :in "~/.emacs.d/init"
  :create (find-file "~/.emacs.d/init.el"))
 ```
-Switching to a terminal dedicated to the `emacs` state:
+- Switching to a terminal dedicated to the `emacs` state:
 ```lisp
 (state-define-state
  emacs-term
@@ -91,7 +92,7 @@ Switching to a terminal dedicated to the `emacs` state:
            (switch-to-buffer-other-window "*ansi-term (dotemacs)*"))
  :create (ansi-term "/bin/zsh" "ansi-term (dotemacs)"))
 ```
-Switching to a general purpose terminal:
+- Switching to a general purpose terminal:
 ```lisp
 (state-define-state
  term
@@ -103,7 +104,7 @@ Switching to a general purpose terminal:
            (switch-to-buffer-other-window "*ansi-term*"))
  :create (ansi-term "/bin/zsh"))
 ```
-Switching to `gnus`:
+- Switching to `gnus`:
 ```lisp
 (state-define-state
  gnus
@@ -115,8 +116,8 @@ Switching to `gnus`:
              gnus-article-mode))
  :create gnus)
 ```
-For ERC users, switching to ERC and cycling through ERC buffers by
-pressing "i" repeatedly:
+- For ERC users, switching to ERC and cycling through ERC buffers by
+pressing <kbd>i</kbd> repeatedly:
 ```lisp
 (state-define-state
  erc
@@ -140,7 +141,7 @@ with `erc-start-or-switch` being
            :nick "thisirs"
            :password (secrets-get-secret "Default" "NickServ")))))
 ```
-A context-aware switch to associated repl. Pressing <kbd>s-s j</kbd>
+- A context-aware switch to associated repl. Pressing <kbd>s-s j</kbd>
 in an emacs-lisp file switches to `ielm`. Same for `MATLAB`, `python`
 and `ruby` files.
 ```lisp
