@@ -141,8 +141,8 @@ with `erc-start-or-switch` being
            :password (secrets-get-secret "Default" "NickServ")))))
 ```
 A context-aware switch to associated repl. Pressing <kbd>s-s j</kbd>
-in an emacs-lisp file switches to `ielm'. Same for `MATLAB', `python'
-and `ruby' files.
+in an emacs-lisp file switches to `ielm`. Same for `MATLAB`, `python`
+and `ruby` files.
 ```lisp
 (defmacro state-define-repl (name key buffer-name from create)
   `(state-define-state
