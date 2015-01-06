@@ -5,6 +5,7 @@
 ;; Author: Sylvain Rousseau <thisirs at gmail dot com>
 ;; Keywords: convenience, workspaces
 ;; Package-Requires: ((emacs "24"))
+;; Package-Version: 0.1
 ;; URL: https://github.com/thisirs/state.git
 
 ;; This program is free software; you can redistribute it and/or modify
