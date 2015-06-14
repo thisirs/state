@@ -36,6 +36,17 @@
 (eval-when-compile
   (require 'cl-lib))
 
+;; Compatibility
+(unless (functionp 'cl-struct-slot-info)
+  (defun cl-struct-slot-info (struct-type)
+    "Return a list of slot names of struct STRUCT-TYPE.
+     Each entry is a list (SLOT-NAME . OPTS), where SLOT-NAME is a
+     slot name symbol and OPTS is a list of slot options given to
+     `cl-defstruct'.  Dummy slots that represent the struct name
+     and slots skipped by :initial-offset may appear in the list."
+    (get struct-type 'cl-struct-slots))
+  (put 'cl-struct-slot-info 'side-effect-free t))
+
 (defvar state-keymap-prefix (kbd "s-s")
   "The prefix command for state's keymap.")
 
@@ -96,7 +107,7 @@ Slots:
 
 If PRED-OR-VALUE is a function, call it with slot's value as
 first argument. Otherwise, compare slot's value with `equal'."
-  (unless (memq slot (mapcar #'car (get 'state 'cl-struct-slots)))
+  (unless (memq slot (mapcar #'car (cl-struct-slot-info 'state)))
     (error "Unknown slot name %s" slot))
   (let ((predicate (if (functionp pred-or-value)
                        pred-or-value
