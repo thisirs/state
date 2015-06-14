@@ -374,7 +374,10 @@ key after switching. Leave nil is you don't want this feature."
     (add-to-list 'state--states state)
 
     ;; Bind if it is not already
-    `(define-key state-prefix-map (kbd ,key) (lambda () (interactive) (state--do-switch ,key)))))
+    `(define-key state-prefix-map (kbd ,key)
+       (lambda ()
+         ,(format "Switch to state `%s'" name)
+         (interactive) (state--do-switch ,key)))))
 
 ;;;###autoload
 (define-minor-mode state-mode
