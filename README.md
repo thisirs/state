@@ -1,11 +1,12 @@
 # state
 
 This library allows you to switch back and forth between predefined
-workspaces. For example, pressing <kbd>s-s g</kbd> switches to `gnus`
-in fullscreen. When you are done with `gnus` your can switch back to
-where you were by pressing the same keystroke. Similarly, you can take
-a quick peek at your `*Messages*` buffer by pressing <kbd>s-s m</kbd>
-and return to where you were by pressing the same keystroke.
+workspaces. It allows you for example to press <kbd>C-c s g</kbd> to
+switch to `gnus` in fullscreen. When you are done with `gnus` your can
+switch back to where you were by pressing the same keystroke.
+Similarly, you can take a quick peek at your `*Messages*` buffer by
+pressing <kbd>s-s m</kbd> and return to where you were by pressing the
+same keystroke.
 
 ## Installation
 
@@ -31,7 +32,7 @@ The first argument to `state-define-state` is a unique symbol
 identifying the state. The rest is a property list. For a simple
 buffer switching state we have to specify the key to press to switch
 to that buffer and the name of the buffer we want to switch to. We
-could have specified the path of a file as well. Pressing <kbd>s-s
+could have specified the path of a file as well. Pressing <kbd>C-c s
 m</kbd> switches to the `*Messages*` buffer. Pressing it again
 switches back to where you were.
 
@@ -141,7 +142,7 @@ with `erc-start-or-switch` being
            :nick "thisirs"
            :password (secrets-get-secret "Default" "NickServ")))))
 ```
-- A context-aware switch to associated repl. Pressing <kbd>s-s j</kbd>
+- A context-aware switch to associated repl. Pressing <kbd>C-c s j</kbd>
 in an emacs-lisp file switches to `ielm`. Same for `MATLAB`, `python`
 and `ruby` files.
 ```lisp

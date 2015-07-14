@@ -28,8 +28,17 @@
 ;;; Installation:
 
 ;; (require 'state)
+;; (state-global-mode 1)
 
-;; See documentation on https://github.com/thisirs/state#state
+;; There is no predefined workspaces to switch to. To switch back and
+;; forth to the *Messages* buffer by pressing C-c s m:
+
+;; (state-define-state
+;;  message
+;;  :key "m"
+;;  :switch "*Messages*")
+
+;; See full documentation on https://github.com/thisirs/state#state
 
 ;;; Code:
 
@@ -47,7 +56,7 @@
     (get struct-type 'cl-struct-slots))
   (put 'cl-struct-slot-info 'side-effect-free t))
 
-(defvar state-keymap-prefix (kbd "s-s")
+(defvar state-keymap-prefix (kbd "C-c s")
   "The prefix command for state's keymap.")
 
 (defvar state-prefix-map (make-sparse-keymap)
