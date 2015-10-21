@@ -88,9 +88,7 @@ Some examples taken from my [emacs configuration](https://github.com/thisirs/dot
  :bound emacs
  :exist (get-buffer "*ansi-term (dotemacs)*")
  :in (equal (buffer-name) "*ansi-term (dotemacs)*")
- :switch (if (get-buffer-window "*ansi-term (dotemacs)*")
-             (select-window (get-buffer-window "*ansi-term (dotemacs)*"))
-           (switch-to-buffer-other-window "*ansi-term (dotemacs)*"))
+ :switch (state-switch-buffer-other-window "*ansi-term (dotemacs)*")
  :create (ansi-term "/bin/zsh" "ansi-term (dotemacs)"))
 ```
 - Switching to a general purpose terminal:
@@ -100,9 +98,7 @@ Some examples taken from my [emacs configuration](https://github.com/thisirs/dot
  :key "z"
  :exist (get-buffer "*ansi-term*")
  :in (equal (buffer-name) "*ansi-term*")
- :switch (if (get-buffer-window "*ansi-term*")
-             (select-window (get-buffer-window "*ansi-term*"))
-           (switch-to-buffer-other-window "*ansi-term*"))
+ :switch (state-switch-buffer-other-window "*ansi-term*")
  :create (ansi-term "/bin/zsh"))
 ```
 - Switching to `gnus`:
@@ -153,9 +149,7 @@ and `ruby` files.
     :key ,key
     :exist (get-buffer ,buffer-name)
     :in (equal (buffer-name) ,buffer-name)
-    :switch (if (get-buffer-window ,buffer-name)
-                (select-window (get-buffer-window ,buffer-name))
-              (switch-to-buffer-other-window ,buffer-name))
+    :switch (state-switch-buffer-other-window ,buffer-name)
     :create (progn
               (switch-to-buffer-other-window (current-buffer))
               ,create)))
