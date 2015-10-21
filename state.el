@@ -168,11 +168,12 @@ ARGS if supplied."
          (unbound (state--filter states 'bound 'not))
          (bound (state--filter states 'bound
                                (lambda (v)
-                                 (if (symbolp v)
-                                     (eq v from-name)
-                                   (if (functionp v)
-                                       (funcall v)
-                                     (eval v)))))))
+                                 (cond ((symbolp v)
+                                        (eq v from-name))
+                                       ((functionp v)
+                                        (funcall v))
+                                       (t
+                                        (eval v)))))))
     (if bound
         (let (bound-min state min)
           (while (setq state (pop bound))
