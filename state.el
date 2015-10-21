@@ -312,62 +312,62 @@ key after switching. Leave nil is you don't want this feature."
     ;; switch is able to create if not existing
     (setf (state-create state)
           (or create
-              (if (stringp switch)
-                  (if (file-name-absolute-p switch)
-                      `(find-file-noselect ,switch)
-                    `(get-buffer-create ,switch))
-                (if (stringp in)
-                    (if (file-directory-p in)
-                        `(dired-noselect ,in)
-                      `(find-file-noselect ,in))))))
+              (cond ((and (stringp switch) (file-name-absolute-p switch))
+                     `(find-file-noselect ,switch))
+                    ((stringp switch)
+                     `(get-buffer-create ,switch))
+                    ((and (stringp in) (file-directory-p in))
+                     `(dired-noselect ,in))
+                    (t
+                     `(find-file-noselect ,in)))))
 
     ;; Rewrite in property if it is a string or if switch is a string
     (setf (state-in state)
-          (if (stringp in)
-              `(string-prefix-p
-                (file-truename ,in)
-                (file-truename (or (buffer-file-name) default-directory "/")))
-            (if (stringp switch)
-                (if (file-name-absolute-p switch)
-                    `(eq (current-buffer) (find-buffer-visiting ,switch))
-                  `(eq (current-buffer) (get-buffer ,switch)))
-              (or in (error "No :in property or not able to infer one")))))
+          (cond ((stringp in)
+                 `(string-prefix-p
+                   (file-truename ,in)
+                   (file-truename (or (buffer-file-name) default-directory "/"))))
+                ((and (stringp switch) (file-name-absolute-p switch))
+                 `(eq (current-buffer) (find-buffer-visiting ,switch)))
+                ((stringp switch)
+                 `(eq (current-buffer) (get-buffer ,switch)))
+                ((null in)
+                 (error "No :in property or not able to infer one"))))
 
     ;; If the exist property is nil, infer one base on switch or in
     ;; properties when they are strings. Otherwise leave nil; create
     ;; is then called every time.
     (setf (state-exist state)
           (or exist
-              (if (stringp in)
-                  `(catch 'found
-                     (progn
-                       (mapc (lambda (buf)
-                               (if (string-prefix-p
-                                    (file-truename ,in)
-                                    (file-truename
-                                     (with-current-buffer buf
-                                       (or (buffer-file-name) default-directory "/"))))
-                                   (throw 'found t)))
-                             (buffer-list))
-                       nil))
-                (if (stringp switch)
-                    `(get-buffer ,switch)))))
+              (cond ((stringp in)
+                     `(catch 'found
+                        (progn
+                          (mapc (lambda (buf)
+                                  (if (string-prefix-p
+                                       (file-truename ,in)
+                                       (file-truename
+                                        (with-current-buffer buf
+                                          (or (buffer-file-name) default-directory "/"))))
+                                      (throw 'found t)))
+                                (buffer-list))
+                          nil)))
+                    ((stringp switch)
+                     `(get-buffer ,switch)))))
 
     ;; Rewrite switch property if it is a string or if in is a string
     (setf (state-switch state)
-          (if switch
-              (if (stringp switch)
-                  (if (file-name-absolute-p switch)
-                      `(if current-prefix-arg
+          (cond ((and (stringp switch) (file-name-absolute-p switch))
+                 `(if current-prefix-arg
                            (switch-to-buffer-other-window
                             (find-file-noselect ,switch))
-                         (find-file-existing ,switch))
-                    `(if current-prefix-arg
+                    (find-file-existing ,switch)))
+                ((stringp switch)
+                 `(if current-prefix-arg
                          (switch-to-buffer-other-window ,switch)
-                       (switch-to-buffer ,switch)))
-                switch)
-            (if (stringp in)
-                `(let ((state (state--get-state-by-name ',name)))
+                    (switch-to-buffer ,switch)))
+                (switch)
+                ((stringp in)
+                 `(let ((state (state--get-state-by-name ',name)))
                    (if (window-configuration-p (state-current state))
                        (set-window-configuration (state-current state))
                      (let ((buffer (or
@@ -386,8 +386,9 @@ key after switching. Leave nil is you don't want this feature."
                                          (dired-noselect ,in))
                                     (error "Unable to switch to state %s" ',name))))
                        (delete-other-windows)
-                       (switch-to-buffer buffer))))
-              `(let ((state (state--get-state-by-name ',name)))
+                       (switch-to-buffer buffer)))))
+                (t
+                 `(let ((state (state--get-state-by-name ',name)))
                  (if (window-configuration-p (state-current state))
                      (set-window-configuration (state-current state)))))))
 
