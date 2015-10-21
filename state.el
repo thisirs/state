@@ -50,7 +50,7 @@
 (eval-when-compile
   (require 'cl-lib))
 
-;; Compatibility
+;;; Compatibility
 (unless (functionp 'cl-struct-slot-info)
   (defun cl-struct-slot-info (struct-type)
     "Return a list of slot names of struct STRUCT-TYPE.
@@ -423,6 +423,13 @@ key after switching. Leave nil is you don't want this feature."
 (defun state-on ()
   "Enable State minor mode."
   (state-mode 1))
+
+;;; Utility function
+(defun state-switch-buffer-other-window (buf)
+  "Select window BUF is shown, otherwise display BUF in other window."
+  (if (get-buffer-window buf)
+      (select-window (get-buffer-window buf))
+    (switch-to-buffer-other-window buf)))
 
 (provide 'state)
 
