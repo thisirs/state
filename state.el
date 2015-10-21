@@ -318,7 +318,7 @@ key after switching. Leave nil is you don't want this feature."
                  `(get-buffer-create ,switch))
                 ((and (stringp in) (file-directory-p in))
                  `(dired-noselect ,in))
-                (t
+                ((stringp in)
                  `(find-file-noselect ,in))))
 
     ;; Rewrite in property if it is a string or if switch is a string
