@@ -327,6 +327,7 @@ key after switching. Leave nil is you don't want this feature."
                  `(string-prefix-p
                    (file-truename ,in)
                    (file-truename (or (buffer-file-name) default-directory "/"))))
+                (in)
                 ((and (stringp switch) (file-name-absolute-p switch))
                  `(eq (current-buffer) (find-buffer-visiting ,switch)))
                 ((stringp switch)
