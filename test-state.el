@@ -25,18 +25,29 @@
   :key "e"
   :in "in"
   :switch "switch")
-(-)
+(state-define-state create-in-exist-switch-before
+  :key "f"
+  :create func-create
+  :in func-in
+  :exist func-exist
+  :switch func-switch
+  :before func-before)
 (setq in-directory (state--get-state-by-name 'in-directory))
 (setq in-file (state--get-state-by-name 'in-file))
 (setq switch-file (state--get-state-by-name 'switch-file))
 (setq switch-buf (state--get-state-by-name 'switch-buf))
 (setq in-sexp (state--get-state-by-name 'in-sexp))
 (setq in-and-switch (state--get-state-by-name 'in-and-switch))
+(setq create-in-exist-switch-before (state--get-state-by-name 'create-in-exist-switch-before))
 
 (note "state-define-state:state-key")
+(assert-raises error
+               (state-define-state no-key :switch func-switch)
+               "no key")
 (assert-equal "a" (state-key in-directory))
 
 (note "state-define-state:state-create")
+(assert-equal 'func-create (state-create create-in-exist-switch-before))
 (assert-equal '(dired-noselect "~/.emacs.d/")
               (state-create in-directory))
 (assert-equal '(find-file-noselect "~/.emacs.d/init.el")
@@ -49,6 +60,7 @@
               (state-create in-and-switch))
 
 (note "state-define-state:state-in")
+(assert-equal 'func-in (state-in create-in-exist-switch-before))
 (assert-equal '(string-prefix-p (file-truename "~/.emacs.d/")
                                 (file-truename (or (buffer-file-name) default-directory "/")))
               (state-in in-directory))
@@ -60,12 +72,13 @@
                                 (file-truename (or (buffer-file-name) default-directory "/")))
               (state-in in-and-switch))
 (assert-raises error
-               (state-define-state
-                err
-                :key "E"
-                :switch func))
+               (state-define-state err
+                 :key "E"
+                 :switch func)
+               "no in")
 
 (note "state-define-state:state-exist")
+(assert-equal 'func-exist (state-exist create-in-exist-switch-before))
 (assert-equal '(catch (quote found)
                  (progn
                    (mapc
@@ -92,6 +105,7 @@
               (state-exist in-and-switch))
 
 (note "state-define-state:state-switch")
+(assert-equal 'func-switch (state-switch create-in-exist-switch-before))
 (assert-equal '(let ((state (state--get-state-by-name (quote in-directory))))
                  (if (window-configuration-p (state-current state))
                      (set-window-configuration (state-current state))
@@ -130,6 +144,7 @@
               (state-switch in-and-switch))
 
 (note "state-define-state:state-before")
+(assert-equal 'func-before (state-before create-in-exist-switch-before))
 (assert-equal
  '(let ((state (state--get-state-by-name (quote in-directory))))
     (when state
