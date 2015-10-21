@@ -194,14 +194,15 @@ ARGS if supplied."
          (states (if (equal key (state-key from))
                      (list from)
                    (state--select-states key from-name)))
-         (to (if (not states)
-                 (error "Non-existent state")
-               (if (= 1 (length states))
-                   (car states)
-                 (state--get-state-by-name
-                  (intern
-                   (completing-read "Choose state: "
-                                    (mapcar (lambda (s) (cons (state-name s) s)) states) nil t))))))
+         (to (cond ((not states)
+                    (error "Non-existent state"))
+                   ((= 1 (length states))
+                    (car states))
+                   (t
+                    (state--get-state-by-name
+                     (intern
+                      (completing-read "Choose state: "
+                                       (mapcar (lambda (s) (cons (state-name s) s)) states) nil t))))))
          (to-name (state-name to)))
     ;; Test if we are switching back
     (if (eq to-name from-name)
