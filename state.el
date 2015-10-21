@@ -45,7 +45,7 @@
 (eval-when-compile
   (require 'cl-lib))
 
-;; Compatibility
+;;; Compatibility
 (unless (functionp 'cl-struct-slot-info)
   (defun cl-struct-slot-info (struct-type)
     "Return a list of slot names of struct STRUCT-TYPE.
