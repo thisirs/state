@@ -12,23 +12,20 @@
 (state-define-state in-file
   :key "b"
   :in "~/.emacs.d/init.el")
-(state-define-state
- switch-file
- :key "c"
- :switch "~/.emacs.d/init.el")
-(state-define-state
- switch-buf
- :key "c"
- :switch "*scratch*")
-(state-define-state
- in-sexp
- :key "d"
- :in (sexp))
-(state-define-state
- in-and-switch
- :key "e"
- :in "in"
- :switch "switch")
+(state-define-state switch-file
+  :key "c"
+  :switch "~/.emacs.d/init.el")
+(state-define-state switch-buf
+  :key "c"
+  :switch "*scratch*")
+(state-define-state in-sexp
+  :key "d"
+  :in (sexp))
+(state-define-state in-and-switch
+  :key "e"
+  :in "in"
+  :switch "switch")
+(-)
 (setq in-directory (state--get-state-by-name 'in-directory))
 (setq in-file (state--get-state-by-name 'in-file))
 (setq switch-file (state--get-state-by-name 'switch-file))
