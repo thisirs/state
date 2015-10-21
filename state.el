@@ -408,6 +408,7 @@ key after switching. Leave nil is you don't want this feature."
        (lambda ()
          ,(format "Switch to state `%s'" name)
          (interactive) (state--do-switch ,key)))))
+(put 'state-define-state 'lisp-indent-function 1)
 
 ;;;###autoload
 (define-minor-mode state-mode
