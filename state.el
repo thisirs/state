@@ -177,11 +177,11 @@ ARGS if supplied."
     (if bound
         (let (bound-min state min)
           (while (setq state (pop bound))
-            (if (eq min (state-priority state))
-                (push state bound-min)
-              (when (and (not min) (< (state-priority state) min))
-                (setq min (state-priority state))
-                (setq bound-min (list state)))))
+            (cond ((eq min (state-priority state))
+                   (push state bound-min))
+                  ((and (not min) (< (state-priority state) min))
+                   (setq min (state-priority state))
+                   (setq bound-min (list state)))))
           bound-min)
       unbound)))
 
