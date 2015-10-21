@@ -225,14 +225,14 @@ ARGS if supplied."
       ;; Executes any other user defined "before" form
       (state-call from 'before)
 
-      (if (state-call to 'exist)
-          (progn
-            (state-call to 'switch)
-            (state-call to 'before))
-        (state-call to 'create)
-        (unless (state-call to 'in)
-          (state-call to 'switch))
-        (state-call to 'before))
+      (cond ((state-call to 'exist)
+             (state-call to 'switch)
+             (state-call to 'before))
+            (t
+             (state-call to 'create)
+             (unless (state-call to 'in)
+               (state-call to 'switch))
+             (state-call to 'before)))
       (message "Switched to state %s" (state-name to))
 
       ;; If keep in non-nil install transient keymap
