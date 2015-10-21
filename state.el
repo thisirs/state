@@ -42,6 +42,11 @@
 
 ;;; Code:
 
+(defgroup state nil
+  "Quick navigation between workspaces"
+  :prefix "state-"
+  :group 'convenience)
+
 (eval-when-compile
   (require 'cl-lib))
 
@@ -56,8 +61,12 @@
     (get struct-type 'cl-struct-slots))
   (put 'cl-struct-slot-info 'side-effect-free t))
 
-(defvar state-keymap-prefix (kbd "C-c s")
-  "The prefix command for state's keymap.")
+(defcustom state-keymap-prefix (kbd "C-c s")
+  "The prefix command for state's keymap.
+The value of this variable is checked as part of loading state mode.
+After that, changing the prefix key requires manipulating `state-mode-map'."
+  :type 'string
+  :group 'state)
 
 (defvar state-prefix-map (make-sparse-keymap)
   "Prefix map for state mode.")
