@@ -311,15 +311,15 @@ key after switching. Leave nil is you don't want this feature."
     ;; is then called even if the state does not exist. Make sure
     ;; switch is able to create if not existing
     (setf (state-create state)
-          (or create
-              (cond ((and (stringp switch) (file-name-absolute-p switch))
-                     `(find-file-noselect ,switch))
-                    ((stringp switch)
-                     `(get-buffer-create ,switch))
-                    ((and (stringp in) (file-directory-p in))
-                     `(dired-noselect ,in))
-                    (t
-                     `(find-file-noselect ,in)))))
+          (cond (create)
+                ((and (stringp switch) (file-name-absolute-p switch))
+                 `(find-file-noselect ,switch))
+                ((stringp switch)
+                 `(get-buffer-create ,switch))
+                ((and (stringp in) (file-directory-p in))
+                 `(dired-noselect ,in))
+                (t
+                 `(find-file-noselect ,in))))
 
     ;; Rewrite in property if it is a string or if switch is a string
     (setf (state-in state)
@@ -339,21 +339,21 @@ key after switching. Leave nil is you don't want this feature."
     ;; properties when they are strings. Otherwise leave nil; create
     ;; is then called every time.
     (setf (state-exist state)
-          (or exist
-              (cond ((stringp in)
-                     `(catch 'found
-                        (progn
-                          (mapc (lambda (buf)
-                                  (if (string-prefix-p
-                                       (file-truename ,in)
-                                       (file-truename
-                                        (with-current-buffer buf
-                                          (or (buffer-file-name) default-directory "/"))))
-                                      (throw 'found t)))
-                                (buffer-list))
-                          nil)))
-                    ((stringp switch)
-                     `(get-buffer ,switch)))))
+          (cond (exist)
+                ((stringp in)
+                 `(catch 'found
+                    (progn
+                      (mapc (lambda (buf)
+                              (if (string-prefix-p
+                                   (file-truename ,in)
+                                   (file-truename
+                                    (with-current-buffer buf
+                                      (or (buffer-file-name) default-directory "/"))))
+                                  (throw 'found t)))
+                            (buffer-list))
+                      nil)))
+                ((stringp switch)
+                 `(get-buffer ,switch))))
 
     ;; Rewrite switch property if it is a string or if in is a string
     (setf (state-switch state)
