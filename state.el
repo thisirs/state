@@ -359,39 +359,39 @@ key after switching. Leave nil is you don't want this feature."
     (setf (state-switch state)
           (cond ((and (stringp switch) (file-name-absolute-p switch))
                  `(if current-prefix-arg
-                           (switch-to-buffer-other-window
-                            (find-file-noselect ,switch))
+                      (switch-to-buffer-other-window
+                       (find-file-noselect ,switch))
                     (find-file-existing ,switch)))
                 ((stringp switch)
                  `(if current-prefix-arg
-                         (switch-to-buffer-other-window ,switch)
+                      (switch-to-buffer-other-window ,switch)
                     (switch-to-buffer ,switch)))
                 (switch)
                 ((stringp in)
                  `(let ((state (state--get-state-by-name ',name)))
-                   (if (window-configuration-p (state-current state))
-                       (set-window-configuration (state-current state))
-                     (let ((buffer (or
-                                    (catch 'found
-                                      (progn
-                                        (mapc (lambda (buf)
-                                                (if (string-prefix-p
-                                                     (file-truename ,in)
-                                                     (file-truename
-                                                      (with-current-buffer buf
-                                                        (or (buffer-file-name) default-directory "/"))))
-                                                    (throw 'found buf)))
-                                              (buffer-list))
-                                        nil))
-                                    (and (file-directory-p ,in)
-                                         (dired-noselect ,in))
-                                    (error "Unable to switch to state %s" ',name))))
-                       (delete-other-windows)
-                       (switch-to-buffer buffer)))))
+                    (if (window-configuration-p (state-current state))
+                        (set-window-configuration (state-current state))
+                      (let ((buffer (or
+                                     (catch 'found
+                                       (progn
+                                         (mapc (lambda (buf)
+                                                 (if (string-prefix-p
+                                                      (file-truename ,in)
+                                                      (file-truename
+                                                       (with-current-buffer buf
+                                                         (or (buffer-file-name) default-directory "/"))))
+                                                     (throw 'found buf)))
+                                               (buffer-list))
+                                         nil))
+                                     (and (file-directory-p ,in)
+                                          (dired-noselect ,in))
+                                     (error "Unable to switch to state %s" ',name))))
+                        (delete-other-windows)
+                        (switch-to-buffer buffer)))))
                 (t
                  `(let ((state (state--get-state-by-name ',name)))
-                 (if (window-configuration-p (state-current state))
-                     (set-window-configuration (state-current state)))))))
+                    (if (window-configuration-p (state-current state))
+                        (set-window-configuration (state-current state)))))))
 
     ;; By default, before switching, store the current window
     ;; configuration in the slot curent.
