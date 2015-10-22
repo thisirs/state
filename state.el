@@ -351,10 +351,13 @@ key after switching. Leave nil is you don't want this feature."
          `(state--in-switch-buffer ,switch))
         ((null in)
          (error "No :in property or not able to infer one"))))
+(defun state--buffer-file-name-prefix-p (buf prefix)
+  (with-current-buffer buf
+    (string-prefix-p
+     (file-truename prefix)
+     (file-truename (or (buffer-file-name) default-directory "/")))))
 (defun state--in-in-file (in)
-  (string-prefix-p
-   (file-truename in)
-   (file-truename (or (buffer-file-name) default-directory "/"))))
+  (state--buffer-file-name-prefix-p (current-buffer) in))
 (defun state--in-switch-file (switch)
   (eq (current-buffer) (find-buffer-visiting switch)))
 (defun state--in-switch-buffer (switch)
@@ -373,11 +376,7 @@ key after switching. Leave nil is you don't want this feature."
   (catch 'found
     (progn
       (mapc (lambda (buf)
-              (if (string-prefix-p
-                   (file-truename in)
-                   (file-truename
-                    (with-current-buffer buf
-                      (or (buffer-file-name) default-directory "/"))))
+              (if (state--buffer-file-name-prefix-p buf in)
                   (throw 'found t)))
             (buffer-list))
       nil)))
@@ -411,11 +410,7 @@ key after switching. Leave nil is you don't want this feature."
                      (catch 'found
                        (progn
                          (mapc (lambda (buf)
-                                 (if (string-prefix-p
-                                      (file-truename in)
-                                      (file-truename
-                                       (with-current-buffer buf
-                                         (or (buffer-file-name) default-directory "/"))))
+                                 (if (state--buffer-file-name-prefix-p buf in)
                                      (throw 'found buf)))
                                (buffer-list))
                          nil))
