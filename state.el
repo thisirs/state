@@ -111,12 +111,8 @@ Slots:
 
 (defvar state--default-state
   (make-state :name 'default
-              :switch '(let ((state (state--get-state-by-name 'default)))
-                         (if (window-configuration-p (state-current state))
-                             (set-window-configuration (state-current state))))
-              :before '(let ((state (state--get-state-by-name 'default)))
-                         (when state
-                           (setf (state-current state) (current-window-configuration)))))
+              :switch '(state--switch-default 'default)
+              :before '(state--before-default 'default))
   "Default state when not in any other state.")
 
 (defun state--filter (collection slot pred-or-value)
@@ -417,7 +413,6 @@ key after switching. Leave nil is you don't want this feature."
   ;; configuration in the slot curent.
   (or before `(state--before-default ',name)))
 (defun state--before-default (name)
-  (interactive)
   (let ((state (state--get-state-by-name name)))
     (when state
       (setf (state-current state) (current-window-configuration)))))
