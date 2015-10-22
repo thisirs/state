@@ -47,8 +47,7 @@
   :prefix "state-"
   :group 'convenience)
 
-(eval-when-compile
-  (require 'cl-lib))
+(require 'cl-lib)
 
 ;;; Compatibility
 (unless (functionp 'cl-struct-slot-info)
@@ -373,13 +372,8 @@ key after switching. Leave nil is you don't want this feature."
         ((stringp switch)
          `(state--exist-switch-buffer ,switch))))
 (defun state--find-file-name-prefix-buffer (prefix)
-  (catch 'found
-    (progn
-      (mapc (lambda (buf)
-              (if (state--buffer-file-name-prefix-p buf prefix)
-                  (throw 'found buf)))
-            (buffer-list))
-      nil)))
+  (cl-find-if (lambda (buf) (state--buffer-file-name-prefix-p buf prefix))
+              (buffer-list)))
 (fset 'state--exist-in-file 'state--find-file-name-prefix-buffer)
 (fset 'state--exist-switch-buffer 'get-buffer)
 
