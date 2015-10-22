@@ -26,6 +26,9 @@ install : $(TAR)
 uninstall :
 	rm -rf $(USER_ELPA_D)/state-*
 
+test:
+	${CASK} exec ${EMACS} ${EMACSFLAGS} -l test-state.el
+
 reinstall : clean uninstall install
 
 clean-all : clean
