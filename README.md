@@ -41,9 +41,9 @@ switches back to where you were.
 If your workspace is not a simple file or if you want a different
 behaviour when switching to it, you have to specify yourself several
 properties.
-- The `:in` property is used to charaterize the state and
-should return a non-nil value if we are currently in this workspace
-and nil otherwise.
+- The `:in` property is used to charaterize the state and should
+  return a non-nil value if we are currently in this workspace and nil
+  otherwise.
 - The `:exist` property tells if the workspace has been created. We no
   longer need to call the create property.
 - The `:create` property is used to create your workspace if it does
