@@ -317,10 +317,7 @@ key after switching. Leave nil is you don't want this feature."
     (add-to-list 'state--states state)
 
     ;; Bind if it is not already
-    `(define-key state-prefix-map (kbd ,key)
-       (lambda ()
-         ,(format "Switch to state `%s'" name)
-         (interactive) (state--do-switch ,key)))))
+    (state--write-define-key name key)))
 (put 'state-define-state 'lisp-indent-function 1)
 
 (defun state--rewrite-create (create in switch)
@@ -417,6 +414,12 @@ key after switching. Leave nil is you don't want this feature."
       `(let ((state (state--get-state-by-name ',name)))
          (when state
            (setf (state-current state) (current-window-configuration))))))
+
+(defun state--write-define-key (name key)
+  `(define-key state-prefix-map (kbd ,key)
+     (lambda ()
+       ,(format "Switch to state `%s'" name)
+       (interactive) (state--do-switch ,key))))
 
 ;;;###autoload
 (define-minor-mode state-mode

@@ -6,6 +6,15 @@
 
 (note "state-define-state")
 
+(assert-equal '(define-key state-prefix-map (kbd "0")
+                 (lambda ()
+                   "Switch to state `test'"
+                   (interactive)
+                   (state--do-switch "0")))
+              (macroexpand '(state-define-state test
+                              :key "0"
+                              :in fake)))
+
 (state-define-state in-directory
   :key "a"
   :in "~/.emacs.d/")
