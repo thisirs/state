@@ -372,14 +372,15 @@ key after switching. Leave nil is you don't want this feature."
          `(state--exist-in-file ,in))
         ((stringp switch)
          `(state--exist-switch-buffer ,switch))))
-(defun state--exist-in-file (in)
+(defun state--find-file-name-prefix-buffer (prefix)
   (catch 'found
     (progn
       (mapc (lambda (buf)
-              (if (state--buffer-file-name-prefix-p buf in)
-                  (throw 'found t)))
+              (if (state--buffer-file-name-prefix-p buf prefix)
+                  (throw 'found buf)))
             (buffer-list))
       nil)))
+(fset 'state--exist-in-file 'state--find-file-name-prefix-buffer)
 (fset 'state--exist-switch-buffer 'get-buffer)
 
 (defun state--rewrite-switch (switch name in)
@@ -406,17 +407,10 @@ key after switching. Leave nil is you don't want this feature."
   (let ((state (state--get-state-by-name name)))
     (if (window-configuration-p (state-current state))
         (set-window-configuration (state-current state))
-      (let ((buffer (or
-                     (catch 'found
-                       (progn
-                         (mapc (lambda (buf)
-                                 (if (state--buffer-file-name-prefix-p buf in)
-                                     (throw 'found buf)))
-                               (buffer-list))
-                         nil))
-                     (and (file-directory-p in)
-                          (dired-noselect in))
-                     (error "Unable to switch to state %s" name))))
+      (let ((buffer (or (state--find-file-name-prefix-buffer in)
+                        (and (file-directory-p in)
+                             (dired-noselect in))
+                        (error "Unable to switch to state %s" name))))
         (delete-other-windows)
         (switch-to-buffer buffer)))))
 (defun state--switch-default (name)
