@@ -168,19 +168,20 @@ ARGS if supplied."
          (unbound (state--filter states 'bound 'not))
          (bound (state--filter states 'bound
                                (lambda (v)
-                                 (if (symbolp v)
-                                     (eq v from-name)
-                                   (if (functionp v)
-                                       (funcall v)
-                                     (eval v)))))))
+                                 (cond ((symbolp v)
+                                        (eq v from-name))
+                                       ((functionp v)
+                                        (funcall v))
+                                       (t
+                                        (eval v)))))))
     (if bound
         (let (bound-min state min)
           (while (setq state (pop bound))
-            (if (eq min (state-priority state))
-                (push state bound-min)
-              (when (and (not min) (< (state-priority state) min))
-                (setq min (state-priority state))
-                (setq bound-min (list state)))))
+            (cond ((eq min (state-priority state))
+                   (push state bound-min))
+                  ((and (not min) (< (state-priority state) min))
+                   (setq min (state-priority state))
+                   (setq bound-min (list state)))))
           bound-min)
       unbound)))
 
@@ -193,55 +194,56 @@ ARGS if supplied."
          (states (if (equal key (state-key from))
                      (list from)
                    (state--select-states key from-name)))
-         (to (if (not states)
-                 (error "Non-existent state")
-               (if (= 1 (length states))
-                   (car states)
-                 (state--get-state-by-name
-                  (intern
-                   (completing-read "Choose state: "
-                                    (mapcar (lambda (s) (cons (state-name s) s)) states) nil t))))))
+         (to (cond ((not states)
+                    (error "Non-existent state"))
+                   ((= 1 (length states))
+                    (car states))
+                   (t
+                    (state--get-state-by-name
+                     (intern
+                      (completing-read "Choose state: "
+                                       (mapcar (lambda (s) (cons (state-name s) s)) states) nil t))))))
          (to-name (state-name to)))
     ;; Test if we are switching back
-    (if (eq to-name from-name)
-        (progn
-          (state-call from 'before)
-          (let ((origin (state-origin from)))
-            (if (not origin)
-                (user-error "Not coming from anywhere")
-              (let ((wconf (state-current (state--get-state-by-name origin))))
-                (if (not (window-configuration-p wconf))
-                    (user-error "No wconf stored for state %s" origin)
-                  (set-window-configuration wconf)
-                  (message "Back to state %s" origin))))))
-      ;; Not switching back but switching to, so save original state
-      (setf (state-origin to) from-name)
+    (cond ((eq to-name from-name)
+           (state-call from 'before)
+           (let ((origin (state-origin from)))
+             (if (not origin)
+                 (user-error "Not coming from anywhere")
+               (let ((wconf (state-current (state--get-state-by-name origin))))
+                 (if (not (window-configuration-p wconf))
+                     (user-error "No wconf stored for state %s" origin)
+                   (set-window-configuration wconf)
+                   (message "Back to state %s" origin))))))
+          (t
+           ;; Not switching back but switching to, so save original state
+           (setf (state-origin to) from-name)
 
-      ;; Save current wonf to restore it if we switch back
-      (setf (state-current from) (current-window-configuration))
+           ;; Save current wonf to restore it if we switch back
+           (setf (state-current from) (current-window-configuration))
 
-      ;; Executes any other user defined "before" form
-      (state-call from 'before)
+           ;; Executes any other user defined "before" form
+           (state-call from 'before)
 
-      (if (state-call to 'exist)
-          (progn
-            (state-call to 'switch)
-            (state-call to 'before))
-        (state-call to 'create)
-        (unless (state-call to 'in)
-          (state-call to 'switch))
-        (state-call to 'before))
-      (message "Switched to state %s" (state-name to))
+           (cond ((state-call to 'exist)
+                  (state-call to 'switch)
+                  (state-call to 'before))
+                 (t
+                  (state-call to 'create)
+                  (unless (state-call to 'in)
+                    (state-call to 'switch))
+                  (state-call to 'before)))
+           (message "Switched to state %s" (state-name to))
 
-      ;; If keep in non-nil install transient keymap
-      (if (state-keep to)
-          (set-transient-map
-           (let ((map (make-sparse-keymap)))
-             (define-key map (kbd key)
-               (lambda ()
-                 (interactive)
-                 (state-call to 'keep to)))
-             map) t)))))
+           ;; If keep in non-nil install transient keymap
+           (if (state-keep to)
+               (set-transient-map
+                (let ((map (make-sparse-keymap)))
+                  (define-key map (kbd key)
+                    (lambda ()
+                      (interactive)
+                      (state-call to 'keep to)))
+                  map) t))))))
 
 ;;;###autoload
 (defmacro state-define-state (name &rest args)
@@ -311,85 +313,87 @@ key after switching. Leave nil is you don't want this feature."
     ;; is then called even if the state does not exist. Make sure
     ;; switch is able to create if not existing
     (setf (state-create state)
-          (or create
-              (if (stringp switch)
-                  (if (file-name-absolute-p switch)
-                      `(find-file-noselect ,switch)
-                    `(get-buffer-create ,switch))
-                (if (stringp in)
-                    (if (file-directory-p in)
-                        `(dired-noselect ,in)
-                      `(find-file-noselect ,in))))))
+          (cond (create)
+                ((and (stringp switch) (file-name-absolute-p switch))
+                 `(find-file-noselect ,switch))
+                ((stringp switch)
+                 `(get-buffer-create ,switch))
+                ((and (stringp in) (file-directory-p in))
+                 `(dired-noselect ,in))
+                ((stringp in)
+                 `(find-file-noselect ,in))))
 
     ;; Rewrite in property if it is a string or if switch is a string
     (setf (state-in state)
-          (if (stringp in)
-              `(string-prefix-p
-                (file-truename ,in)
-                (file-truename (or (buffer-file-name) default-directory "/")))
-            (if (stringp switch)
-                (if (file-name-absolute-p switch)
-                    `(eq (current-buffer) (find-buffer-visiting ,switch))
-                  `(eq (current-buffer) (get-buffer ,switch)))
-              (or in (error "No :in property or not able to infer one")))))
+          (cond ((stringp in)
+                 `(string-prefix-p
+                   (file-truename ,in)
+                   (file-truename (or (buffer-file-name) default-directory "/"))))
+                (in)
+                ((and (stringp switch) (file-name-absolute-p switch))
+                 `(eq (current-buffer) (find-buffer-visiting ,switch)))
+                ((stringp switch)
+                 `(eq (current-buffer) (get-buffer ,switch)))
+                ((null in)
+                 (error "No :in property or not able to infer one"))))
 
     ;; If the exist property is nil, infer one base on switch or in
     ;; properties when they are strings. Otherwise leave nil; create
     ;; is then called every time.
     (setf (state-exist state)
-          (or exist
-              (if (stringp in)
-                  `(catch 'found
-                     (progn
-                       (mapc (lambda (buf)
-                               (if (string-prefix-p
-                                    (file-truename ,in)
-                                    (file-truename
-                                     (with-current-buffer buf
-                                       (or (buffer-file-name) default-directory "/"))))
-                                   (throw 'found t)))
-                             (buffer-list))
-                       nil))
-                (if (stringp switch)
-                    `(get-buffer ,switch)))))
+          (cond (exist)
+                ((stringp in)
+                 `(catch 'found
+                    (progn
+                      (mapc (lambda (buf)
+                              (if (string-prefix-p
+                                   (file-truename ,in)
+                                   (file-truename
+                                    (with-current-buffer buf
+                                      (or (buffer-file-name) default-directory "/"))))
+                                  (throw 'found t)))
+                            (buffer-list))
+                      nil)))
+                ((stringp switch)
+                 `(get-buffer ,switch))))
 
     ;; Rewrite switch property if it is a string or if in is a string
     (setf (state-switch state)
-          (if switch
-              (if (stringp switch)
-                  (if (file-name-absolute-p switch)
-                      `(if current-prefix-arg
-                           (switch-to-buffer-other-window
-                            (find-file-noselect ,switch))
-                         (find-file-existing ,switch))
-                    `(if current-prefix-arg
-                         (switch-to-buffer-other-window ,switch)
-                       (switch-to-buffer ,switch)))
-                switch)
-            (if (stringp in)
-                `(let ((state (state--get-state-by-name ',name)))
-                   (if (window-configuration-p (state-current state))
-                       (set-window-configuration (state-current state))
-                     (let ((buffer (or
-                                    (catch 'found
-                                      (progn
-                                        (mapc (lambda (buf)
-                                                (if (string-prefix-p
-                                                     (file-truename ,in)
-                                                     (file-truename
-                                                      (with-current-buffer buf
-                                                        (or (buffer-file-name) default-directory "/"))))
-                                                    (throw 'found buf)))
-                                              (buffer-list))
-                                        nil))
-                                    (and (file-directory-p ,in)
-                                         (dired-noselect ,in))
-                                    (error "Unable to switch to state %s" ',name))))
-                       (delete-other-windows)
-                       (switch-to-buffer buffer))))
-              `(let ((state (state--get-state-by-name ',name)))
-                 (if (window-configuration-p (state-current state))
-                     (set-window-configuration (state-current state)))))))
+          (cond ((and (stringp switch) (file-name-absolute-p switch))
+                 `(if current-prefix-arg
+                      (switch-to-buffer-other-window
+                       (find-file-noselect ,switch))
+                    (find-file-existing ,switch)))
+                ((stringp switch)
+                 `(if current-prefix-arg
+                      (switch-to-buffer-other-window ,switch)
+                    (switch-to-buffer ,switch)))
+                (switch)
+                ((stringp in)
+                 `(let ((state (state--get-state-by-name ',name)))
+                    (if (window-configuration-p (state-current state))
+                        (set-window-configuration (state-current state))
+                      (let ((buffer (or
+                                     (catch 'found
+                                       (progn
+                                         (mapc (lambda (buf)
+                                                 (if (string-prefix-p
+                                                      (file-truename ,in)
+                                                      (file-truename
+                                                       (with-current-buffer buf
+                                                         (or (buffer-file-name) default-directory "/"))))
+                                                     (throw 'found buf)))
+                                               (buffer-list))
+                                         nil))
+                                     (and (file-directory-p ,in)
+                                          (dired-noselect ,in))
+                                     (error "Unable to switch to state %s" ',name))))
+                        (delete-other-windows)
+                        (switch-to-buffer buffer)))))
+                (t
+                 `(let ((state (state--get-state-by-name ',name)))
+                    (if (window-configuration-p (state-current state))
+                        (set-window-configuration (state-current state)))))))
 
     ;; By default, before switching, store the current window
     ;; configuration in the slot curent.
@@ -407,6 +411,7 @@ key after switching. Leave nil is you don't want this feature."
        (lambda ()
          ,(format "Switch to state `%s'" name)
          (interactive) (state--do-switch ,key)))))
+(put 'state-define-state 'lisp-indent-function 1)
 
 ;;;###autoload
 (define-minor-mode state-mode
