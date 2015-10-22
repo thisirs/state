@@ -57,28 +57,28 @@
 
 (note "state-define-state:state-create")
 (assert-equal 'func-create (state-create create-in-exist-switch-before))
-(assert-equal '(dired-noselect "~/.emacs.d/")
+
+(assert-equal '(state--create-in-directory "~/.emacs.d/")
               (state-create in-directory))
-(assert-equal '(find-file-noselect "~/.emacs.d/init.el")
+(assert-equal '(state--create-in-file "~/.emacs.d/init.el")
               (state-create in-file))
-(assert-equal '(find-file-noselect "~/.emacs.d/init.el")
+(assert-equal '(state--create-switch-file "~/.emacs.d/init.el")
               (state-create switch-file))
-(assert-equal '(get-buffer-create "*scratch*")
+(assert-equal '(state--create-switch-buffer "*scratch*")
               (state-create switch-buf))
-(assert-equal '(get-buffer-create "switch")
+(assert-equal '(state--create-switch-buffer "switch")
               (state-create in-and-switch))
+
 
 (note "state-define-state:state-in")
 (assert-equal 'func-in (state-in create-in-exist-switch-before))
-(assert-equal '(string-prefix-p (file-truename "~/.emacs.d/")
-                                (file-truename (or (buffer-file-name) default-directory "/")))
+(assert-equal '(state--in-in-file "~/.emacs.d/")
               (state-in in-directory))
-(assert-equal '(eq (current-buffer) (find-buffer-visiting "~/.emacs.d/init.el"))
+(assert-equal '(state--in-switch-file "~/.emacs.d/init.el")
               (state-in switch-file))
-(assert-equal '(eq (current-buffer) (get-buffer "*scratch*"))
+(assert-equal '(state--in-switch-buffer "*scratch*")
               (state-in switch-buf))
-(assert-equal '(string-prefix-p (file-truename "in")
-                                (file-truename (or (buffer-file-name) default-directory "/")))
+(assert-equal '(state--in-in-file "in")
               (state-in in-and-switch))
 (assert-raises error
                (state-define-state err
@@ -88,77 +88,30 @@
 
 (note "state-define-state:state-exist")
 (assert-equal 'func-exist (state-exist create-in-exist-switch-before))
-(assert-equal '(catch (quote found)
-                 (progn
-                   (mapc
-                    (lambda (buf)
-                      (if (string-prefix-p
-                           (file-truename "~/.emacs.d/")
-                           (file-truename (with-current-buffer buf (or (buffer-file-name) default-directory "/"))))
-                          (throw (quote found) t)))
-                    (buffer-list))
-                   nil))
+(assert-equal '(state--exist-in-file "~/.emacs.d/")
               (state-exist in-directory))
-(assert-equal '(get-buffer "*scratch*")
+(assert-equal '(state--exist-switch-buffer "*scratch*")
               (state-exist switch-buf))
-(assert-equal '(catch (quote found)
-                 (progn
-                   (mapc
-                    (lambda (buf)
-                      (if (string-prefix-p
-                           (file-truename "in")
-                           (file-truename (with-current-buffer buf (or (buffer-file-name) default-directory "/"))))
-                          (throw (quote found) t)))
-                    (buffer-list))
-                   nil))
+(assert-equal '(state--exist-in-file "in")
               (state-exist in-and-switch))
 
 (note "state-define-state:state-switch")
 (assert-equal 'func-switch (state-switch create-in-exist-switch-before))
-(assert-equal '(let ((state (state--get-state-by-name (quote in-directory))))
-                 (if (window-configuration-p (state-current state))
-                     (set-window-configuration (state-current state))
-                   (let ((buffer
-                          (or (catch (quote found)
-                                (progn (mapc
-                                        (lambda (buf)
-                                          (if (string-prefix-p
-                                               (file-truename "~/.emacs.d/")
-                                               (file-truename (with-current-buffer buf
-                                                                (or (buffer-file-name) default-directory "/"))))
-                                              (throw (quote found) buf)))
-                                        (buffer-list))
-                                       nil))
-                              (and (file-directory-p "~/.emacs.d/")
-                                   (dired-noselect "~/.emacs.d/"))
-                              (error "Unable to switch to state %s" (quote in-directory)))))
-                     (delete-other-windows)
-                     (switch-to-buffer buffer))))
+(assert-equal '(state--switch-in-file "~/.emacs.d/" 'in-directory)
               (state-switch in-directory))
-(assert-equal '(if current-prefix-arg
-                   (switch-to-buffer-other-window (find-file-noselect "~/.emacs.d/init.el"))
-                 (find-file-existing "~/.emacs.d/init.el"))
+(assert-equal '(state--switch-switch-file "~/.emacs.d/init.el")
               (state-switch switch-file))
-(assert-equal '(if current-prefix-arg
-                   (switch-to-buffer-other-window "*scratch*")
-                 (switch-to-buffer "*scratch*"))
+(assert-equal '(state--switch-switch-buffer "*scratch*")
               (state-switch switch-buf))
-(assert-equal '(let ((state (state--get-state-by-name (quote in-sexp))))
-                 (if (window-configuration-p (state-current state))
-                     (set-window-configuration (state-current state))))
+(assert-equal '(state--switch-default 'in-sexp)
               (state-switch in-sexp))
-(assert-equal '(if current-prefix-arg
-                   (switch-to-buffer-other-window "switch")
-                 (switch-to-buffer "switch"))
+(assert-equal '(state--switch-switch-buffer "switch")
               (state-switch in-and-switch))
 
 (note "state-define-state:state-before")
 (assert-equal 'func-before (state-before create-in-exist-switch-before))
-(assert-equal
- '(let ((state (state--get-state-by-name (quote in-directory))))
-    (when state
-      (setf (state-current state) (current-window-configuration))))
- (state-before in-directory))
+(assert-equal '(state--before-default 'in-directory)
+              (state-before in-directory))
 
 (note "state-define-state:in:string:directory")
 (note "state-define-state:in:string:file")
