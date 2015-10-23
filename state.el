@@ -47,8 +47,7 @@
   :prefix "state-"
   :group 'convenience)
 
-(eval-when-compile
-  (require 'cl-lib))
+(require 'cl-lib)
 
 ;;; Compatibility
 (unless (functionp 'cl-struct-slot-info)
@@ -112,12 +111,8 @@ Slots:
 
 (defvar state--default-state
   (make-state :name 'default
-              :switch '(let ((state (state--get-state-by-name 'default)))
-                         (if (window-configuration-p (state-current state))
-                             (set-window-configuration (state-current state))))
-              :before '(let ((state (state--get-state-by-name 'default)))
-                         (when state
-                           (setf (state-current state) (current-window-configuration)))))
+              :switch '(state--switch-default 'default)
+              :before '(state--before-default 'default))
   "Default state when not in any other state.")
 
 (defun state--filter (collection slot pred-or-value)
@@ -307,111 +302,126 @@ key after switching. Leave nil is you don't want this feature."
     (setf (state-priority state) priority)
     (setf (state-bound state) bound)
     (setf (state-keep state) keep)
-
-    ;; If the create property is nil, infer one base on switch or in
-    ;; properties if they are strings. Otherwise leave nil; switch
-    ;; is then called even if the state does not exist. Make sure
-    ;; switch is able to create if not existing
-    (setf (state-create state)
-          (cond (create)
-                ((and (stringp switch) (file-name-absolute-p switch))
-                 `(find-file-noselect ,switch))
-                ((stringp switch)
-                 `(get-buffer-create ,switch))
-                ((and (stringp in) (file-directory-p in))
-                 `(dired-noselect ,in))
-                ((stringp in)
-                 `(find-file-noselect ,in))))
-
-    ;; Rewrite in property if it is a string or if switch is a string
-    (setf (state-in state)
-          (cond ((stringp in)
-                 `(string-prefix-p
-                   (file-truename ,in)
-                   (file-truename (or (buffer-file-name) default-directory "/"))))
-                (in)
-                ((and (stringp switch) (file-name-absolute-p switch))
-                 `(eq (current-buffer) (find-buffer-visiting ,switch)))
-                ((stringp switch)
-                 `(eq (current-buffer) (get-buffer ,switch)))
-                ((null in)
-                 (error "No :in property or not able to infer one"))))
-
-    ;; If the exist property is nil, infer one base on switch or in
-    ;; properties when they are strings. Otherwise leave nil; create
-    ;; is then called every time.
-    (setf (state-exist state)
-          (cond (exist)
-                ((stringp in)
-                 `(catch 'found
-                    (progn
-                      (mapc (lambda (buf)
-                              (if (string-prefix-p
-                                   (file-truename ,in)
-                                   (file-truename
-                                    (with-current-buffer buf
-                                      (or (buffer-file-name) default-directory "/"))))
-                                  (throw 'found t)))
-                            (buffer-list))
-                      nil)))
-                ((stringp switch)
-                 `(get-buffer ,switch))))
-
-    ;; Rewrite switch property if it is a string or if in is a string
-    (setf (state-switch state)
-          (cond ((and (stringp switch) (file-name-absolute-p switch))
-                 `(if current-prefix-arg
-                      (switch-to-buffer-other-window
-                       (find-file-noselect ,switch))
-                    (find-file-existing ,switch)))
-                ((stringp switch)
-                 `(if current-prefix-arg
-                      (switch-to-buffer-other-window ,switch)
-                    (switch-to-buffer ,switch)))
-                (switch)
-                ((stringp in)
-                 `(let ((state (state--get-state-by-name ',name)))
-                    (if (window-configuration-p (state-current state))
-                        (set-window-configuration (state-current state))
-                      (let ((buffer (or
-                                     (catch 'found
-                                       (progn
-                                         (mapc (lambda (buf)
-                                                 (if (string-prefix-p
-                                                      (file-truename ,in)
-                                                      (file-truename
-                                                       (with-current-buffer buf
-                                                         (or (buffer-file-name) default-directory "/"))))
-                                                     (throw 'found buf)))
-                                               (buffer-list))
-                                         nil))
-                                     (and (file-directory-p ,in)
-                                          (dired-noselect ,in))
-                                     (error "Unable to switch to state %s" ',name))))
-                        (delete-other-windows)
-                        (switch-to-buffer buffer)))))
-                (t
-                 `(let ((state (state--get-state-by-name ',name)))
-                    (if (window-configuration-p (state-current state))
-                        (set-window-configuration (state-current state)))))))
-
-    ;; By default, before switching, store the current window
-    ;; configuration in the slot curent.
-    (setf (state-before state)
-          (or before
-              `(let ((state (state--get-state-by-name ',name)))
-                 (when state
-                   (setf (state-current state) (current-window-configuration))))))
+    (setf (state-create state) (state--rewrite-create create in switch))
+    (setf (state-in state) (state--rewrite-in in switch))
+    (setf (state-exist state) (state--rewrite-exist exist in switch))
+    (setf (state-switch state) (state--rewrite-switch switch name in))
+    (setf (state-before state) (state--rewrite-before before name))
 
     ;; Add to list of states
     (add-to-list 'state--states state)
 
     ;; Bind if it is not already
-    `(define-key state-prefix-map (kbd ,key)
-       (lambda ()
-         ,(format "Switch to state `%s'" name)
-         (interactive) (state--do-switch ,key)))))
+    (state--write-define-key name key)))
 (put 'state-define-state 'lisp-indent-function 1)
+
+(defun state--rewrite-create (create in switch)
+  ;; If the create property is nil, infer one base on switch or in
+  ;; properties if they are strings. Otherwise leave nil; switch
+  ;; is then called even if the state does not exist. Make sure
+  ;; switch is able to create if not existing
+  (cond (create)
+        ((and (stringp switch) (file-name-absolute-p switch))
+         `(state--create-switch-file ,switch))
+        ((stringp switch)
+         `(state--create-switch-buffer ,switch))
+        ((and (stringp in) (file-directory-p in))
+         `(state--create-in-directory ,in))
+        ((stringp in)
+         `(state--create-in-file ,in))))
+(fset 'state--create-in-directory 'dired-noselect)
+(fset 'state--create-in-file 'dired-noselect)
+(fset 'state--create-switch-file 'find-file-noselect)
+(fset 'state--create-switch-buffer 'get-buffer-create)
+
+
+(defun state--rewrite-in (in switch)
+  ;; Rewrite in property if it is a string or if switch is a string
+  (cond ((stringp in)
+         `(state--in-in-file ,in))
+        (in)
+        ((and (stringp switch) (file-name-absolute-p switch))
+         `(state--in-switch-file ,switch))
+        ((stringp switch)
+         `(state--in-switch-buffer ,switch))
+        ((null in)
+         (error "No :in property or not able to infer one"))))
+(defun state--buffer-file-name-prefix-p (buf prefix)
+  (with-current-buffer buf
+    (string-prefix-p
+     (file-truename prefix)
+     (file-truename (or (buffer-file-name) default-directory "/")))))
+(defun state--in-in-file (in)
+  (state--buffer-file-name-prefix-p (current-buffer) in))
+(defun state--in-switch-file (switch)
+  (eq (current-buffer) (find-buffer-visiting switch)))
+(defun state--in-switch-buffer (switch)
+  (eq (current-buffer) (get-buffer switch)))
+
+(defun state--rewrite-exist (exist in switch)
+  ;; If the exist property is nil, infer one base on switch or in
+  ;; properties when they are strings. Otherwise leave nil; create
+  ;; is then called every time.
+  (cond (exist)
+        ((stringp in)
+         `(state--exist-in-file ,in))
+        ((stringp switch)
+         `(state--exist-switch-buffer ,switch))))
+(defun state--find-file-name-prefix-buffer (prefix)
+  (cl-find-if (lambda (buf) (state--buffer-file-name-prefix-p buf prefix))
+              (buffer-list)))
+(fset 'state--exist-in-file 'state--find-file-name-prefix-buffer)
+(fset 'state--exist-switch-buffer 'get-buffer)
+
+(defun state--rewrite-switch (switch name in)
+  ;; Rewrite switch property if it is a string or if in is a string
+  (cond ((and (stringp switch) (file-name-absolute-p switch))
+         `(state--switch-switch-file ,switch))
+        ((stringp switch)
+         `(state--switch-switch-buffer ,switch))
+        (switch)
+        ((stringp in)
+         `(state--switch-in-file ,in ',name))
+        (t
+         `(state--switch-default ',name))))
+(defun state--switch-switch-file (switch)
+  (if current-prefix-arg
+      (switch-to-buffer-other-window
+       (find-file-noselect switch))
+    (find-file-existing switch)))
+(defun state--switch-switch-buffer (switch)
+  (if current-prefix-arg
+      (switch-to-buffer-other-window switch)
+    (switch-to-buffer switch)))
+(defun state--switch-in-file (in name)
+  (let ((state (state--get-state-by-name name)))
+    (if (window-configuration-p (state-current state))
+        (set-window-configuration (state-current state))
+      (let ((buffer (or (state--find-file-name-prefix-buffer in)
+                        (and (file-directory-p in)
+                             (dired-noselect in))
+                        (error "Unable to switch to state %s" name))))
+        (delete-other-windows)
+        (switch-to-buffer buffer)))))
+(defun state--switch-default (name)
+  (let ((state (state--get-state-by-name name)))
+    (if (window-configuration-p (state-current state))
+        (set-window-configuration (state-current state)))))
+
+(defun state--rewrite-before (before name)
+  ;; By default, before switching, store the current window
+  ;; configuration in the slot curent.
+  (or before `(state--before-default ',name)))
+(defun state--before-default (name)
+  (let ((state (state--get-state-by-name name)))
+    (when state
+      (setf (state-current state) (current-window-configuration)))))
+
+(defun state--write-define-key (name key)
+  `(define-key state-prefix-map (kbd ,key)
+     (lambda ()
+       ,(format "Switch to state `%s'" name)
+       (interactive) (state--do-switch ,key))))
 
 ;;;###autoload
 (define-minor-mode state-mode
