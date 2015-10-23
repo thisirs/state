@@ -42,11 +42,6 @@
 
 ;;; Code:
 
-(defgroup state nil
-  "Quick navigation between workspaces"
-  :prefix "state-"
-  :group 'convenience)
-
 (require 'cl-lib)
 
 ;;; Compatibility
@@ -60,6 +55,12 @@
     (get struct-type 'cl-struct-slots))
   (put 'cl-struct-slot-info 'side-effect-free t))
 
+;;; Customization
+(defgroup state nil
+  "Quick navigation between workspaces"
+  :prefix "state-"
+  :group 'convenience)
+
 (defcustom state-keymap-prefix (kbd "C-c s")
   "The prefix command for state's keymap.
 The value of this variable is checked as part of loading state mode.
@@ -67,15 +68,7 @@ After that, changing the prefix key requires manipulating `state-mode-map'."
   :type 'string
   :group 'state)
 
-(defvar state-prefix-map (make-sparse-keymap)
-  "Prefix map for state mode.")
-
-(defvar state-mode-map
-  (let ((map (make-sparse-keymap)))
-    (define-key map state-keymap-prefix state-prefix-map)
-    map)
-  "Keymap for state mode.")
-
+;;; Core
 (cl-defstruct state
   "Structure representing a state.
 Slots:
@@ -121,7 +114,7 @@ Slots:
 If PRED-OR-VALUE is a function, call it with slot's value as
 first argument. Otherwise, compare slot's value with `equal'."
   (unless (memq slot (mapcar #'car (cl-struct-slot-info 'state)))
-    (error "Unknown slot name %s" slot))
+    (error "Unknown slot name: %s" slot))
   (let ((predicate (if (functionp pred-or-value)
                        pred-or-value
                      (lambda (v) (equal pred-or-value v))))
@@ -133,6 +126,7 @@ first argument. Otherwise, compare slot's value with `equal'."
 
 (defun state--get-state-by-name (name)
   "Return a state object with name NAME found in `state--states'.
+
 If NAME is equal to `default', return the default state
 `state--default-state', nil otherwise."
   (if (eq name 'default)
@@ -158,7 +152,7 @@ ARGS if supplied."
       (eval value))))
 
 (defun state--select-states (key from-name)
-  "Select states from `states--states' that have the key KEY"
+  "Select states from `states--states' that have the key KEY."
   (let* ((states (state--filter state--states 'key key))
          (unbound (state--filter states 'bound 'not))
          (bound (state--filter states 'bound
@@ -207,14 +201,16 @@ ARGS if supplied."
                  (user-error "Not coming from anywhere")
                (let ((wconf (state-current (state--get-state-by-name origin))))
                  (if (not (window-configuration-p wconf))
-                     (user-error "No wconf stored for state %s" origin)
+                     (user-error "No wconf stored for `%s' state" origin)
                    (set-window-configuration wconf)
-                   (message "Back to state %s" origin))))))
+                   (if (eq origin 'default)
+                       (message "Back to default state")
+                     (message "Back to `%s' state" origin)))))))
           (t
            ;; Not switching back but switching to, so save original state
            (setf (state-origin to) from-name)
 
-           ;; Save current wonf to restore it if we switch back
+           ;; Save current wconf to restore it if we switch back
            (setf (state-current from) (current-window-configuration))
 
            ;; Executes any other user defined "before" form
@@ -228,7 +224,7 @@ ARGS if supplied."
                   (unless (state-call to 'in)
                     (state-call to 'switch))
                   (state-call to 'before)))
-           (message "Switched to state %s" (state-name to))
+           (message "Switched to `%s' state" (state-name to))
 
            ;; If keep in non-nil install transient keymap
            (if (state-keep to)
@@ -316,10 +312,10 @@ key after switching. Leave nil is you don't want this feature."
 (put 'state-define-state 'lisp-indent-function 1)
 
 (defun state--rewrite-create (create in switch)
-  ;; If the create property is nil, infer one base on switch or in
-  ;; properties if they are strings. Otherwise leave nil; switch
-  ;; is then called even if the state does not exist. Make sure
-  ;; switch is able to create if not existing
+  "Return a modified CREATE propery based on IN or SWITCH.
+
+If CREATE is nil, infer one base on SWITCH or IN properties if
+they are strings. Otherwise leave nil."
   (cond (create)
         ((and (stringp switch) (file-name-absolute-p switch))
          `(state--create-switch-file ,switch))
@@ -329,6 +325,7 @@ key after switching. Leave nil is you don't want this feature."
          `(state--create-in-directory ,in))
         ((stringp in)
          `(state--create-in-file ,in))))
+
 (fset 'state--create-in-directory 'dired-noselect)
 (fset 'state--create-in-file 'dired-noselect)
 (fset 'state--create-switch-file 'find-file-noselect)
@@ -336,7 +333,7 @@ key after switching. Leave nil is you don't want this feature."
 
 
 (defun state--rewrite-in (in switch)
-  ;; Rewrite in property if it is a string or if switch is a string
+  "Return a modified IN property based on SWITCH."
   (cond ((stringp in)
          `(state--in-in-file ,in))
         (in)
@@ -346,35 +343,43 @@ key after switching. Leave nil is you don't want this feature."
          `(state--in-switch-buffer ,switch))
         ((null in)
          (error "No :in property or not able to infer one"))))
+
 (defun state--buffer-file-name-prefix-p (buf prefix)
   (with-current-buffer buf
     (string-prefix-p
      (file-truename prefix)
      (file-truename (or (buffer-file-name) default-directory "/")))))
+
 (defun state--in-in-file (in)
   (state--buffer-file-name-prefix-p (current-buffer) in))
+
 (defun state--in-switch-file (switch)
   (eq (current-buffer) (find-buffer-visiting switch)))
+
 (defun state--in-switch-buffer (switch)
   (eq (current-buffer) (get-buffer switch)))
 
+
 (defun state--rewrite-exist (exist in switch)
-  ;; If the exist property is nil, infer one base on switch or in
-  ;; properties when they are strings. Otherwise leave nil; create
-  ;; is then called every time.
+  "Return a modified EXIST property based on IN or SWITCH.
+
+If the EXIST property is nil, infer one base on SWITCH or IN if
+they are strings. Otherwise leave nil."
   (cond (exist)
         ((stringp in)
          `(state--exist-in-file ,in))
         ((stringp switch)
          `(state--exist-switch-buffer ,switch))))
+
 (defun state--find-file-name-prefix-buffer (prefix)
   (cl-find-if (lambda (buf) (state--buffer-file-name-prefix-p buf prefix))
               (buffer-list)))
+
 (fset 'state--exist-in-file 'state--find-file-name-prefix-buffer)
 (fset 'state--exist-switch-buffer 'get-buffer)
 
 (defun state--rewrite-switch (switch name in)
-  ;; Rewrite switch property if it is a string or if in is a string
+  "Return a modified SWITCH property based on NAME or IN."
   (cond ((and (stringp switch) (file-name-absolute-p switch))
          `(state--switch-switch-file ,switch))
         ((stringp switch)
@@ -384,15 +389,18 @@ key after switching. Leave nil is you don't want this feature."
          `(state--switch-in-file ,in ',name))
         (t
          `(state--switch-default ',name))))
+
 (defun state--switch-switch-file (switch)
   (if current-prefix-arg
       (switch-to-buffer-other-window
        (find-file-noselect switch))
     (find-file-existing switch)))
+
 (defun state--switch-switch-buffer (switch)
   (if current-prefix-arg
       (switch-to-buffer-other-window switch)
     (switch-to-buffer switch)))
+
 (defun state--switch-in-file (in name)
   (let ((state (state--get-state-by-name name)))
     (if (window-configuration-p (state-current state))
@@ -400,19 +408,23 @@ key after switching. Leave nil is you don't want this feature."
       (let ((buffer (or (state--find-file-name-prefix-buffer in)
                         (and (file-directory-p in)
                              (dired-noselect in))
-                        (error "Unable to switch to state %s" name))))
+                        (error "Unable to switch to `%s' state" name))))
         (delete-other-windows)
         (switch-to-buffer buffer)))))
+
 (defun state--switch-default (name)
   (let ((state (state--get-state-by-name name)))
     (if (window-configuration-p (state-current state))
         (set-window-configuration (state-current state)))))
 
 (defun state--rewrite-before (before name)
-  ;; By default, before switching, store the current window
-  ;; configuration in the slot curent.
+  "Return a modified BEFORE property based on NAME."
   (or before `(state--before-default ',name)))
+
 (defun state--before-default (name)
+  "Default :before property base on NAME of state.
+
+Store the current window configuration in the slot curent."
   (let ((state (state--get-state-by-name name)))
     (when state
       (setf (state-current state) (current-window-configuration)))))
@@ -422,6 +434,17 @@ key after switching. Leave nil is you don't want this feature."
      (lambda ()
        ,(format "Switch to state `%s'" name)
        (interactive) (state--do-switch ,key))))
+
+
+;;; Minor mode
+(defvar state-prefix-map (make-sparse-keymap)
+  "Prefix map for state mode.")
+
+(defvar state-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map state-keymap-prefix state-prefix-map)
+    map)
+  "Keymap for state mode.")
 
 ;;;###autoload
 (define-minor-mode state-mode
