@@ -27,7 +27,7 @@ uninstall :
 	rm -rf $(USER_ELPA_D)/state-*
 
 test:
-	${CASK} exec ${EMACS} ${EMACSFLAGS} -l test-state.el
+	${CASK} exec ${EMACS} ${EMACSFLAGS} -l state-tests.el
 
 reinstall : clean uninstall install
 
