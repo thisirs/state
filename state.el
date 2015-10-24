@@ -149,7 +149,7 @@ ARGS if supplied."
       (eval value))))
 
 (defun state--select-states (key from-name)
-  "Select states from `states--states' that have the key KEY."
+  "Return states to switch to when KEY is pressed and when coming from FROM-NAME."
   (let* ((states (state--filter state--states 'key key))
          (unbound (state--filter states 'bound 'not))
          (bound (state--filter states 'bound
