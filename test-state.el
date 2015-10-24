@@ -113,6 +113,20 @@
 (assert-equal '(state--before-default 'in-directory)
               (state-before in-directory))
 
-(note "state-define-state:in:string:directory")
-(note "state-define-state:in:string:file")
+(note "priority")
+
+(state-define-state 1 :key "a" :in "a" :bound 1 :priority 10)
+(state-define-state 2 :key "a" :in "a" :bound 1)
+(assert-equal '(2) (mapcar 'state-name (state--select-states "a" 'default)))
+
+(state-define-state 3 :key "b" :in "a" :bound 1 :priority 10)
+(state-define-state 4 :key "b" :in "a" :bound 1 :priority 5)
+(state-define-state 5 :key "b" :in "a" :bound 1 :priority 7)
+(assert-equal '(4) (mapcar 'state-name (state--select-states "b" 'default)))
+
+(state-define-state 6 :key "c" :in "a" :bound 1 :priority 10)
+(state-define-state 7 :key "c" :in "a" :bound 1 :priority 5)
+(state-define-state 8 :key "c" :in "a" :bound 1 :priority 5)
+(assert-equal '(7 8) (sort (mapcar 'state-name (state--select-states "c" 'default)) '<))
+
 (end-tests)
