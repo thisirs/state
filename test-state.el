@@ -113,20 +113,30 @@
 (assert-equal '(state--before-default 'in-directory)
               (state-before in-directory))
 
-(note "priority")
+(note "priority:bound")
+(state-define-state 1 :key "C-a" :in "a" :bound 1 :priority 10)
+(state-define-state 2 :key "C-a" :in "a" :bound 1)
+(assert-equal '(2) (mapcar 'state-name (state--select-states "C-a" 'default)))
 
-(state-define-state 1 :key "a" :in "a" :bound 1 :priority 10)
-(state-define-state 2 :key "a" :in "a" :bound 1)
-(assert-equal '(2) (mapcar 'state-name (state--select-states "a" 'default)))
+(state-define-state 3 :key "C-b" :in "a" :bound 1 :priority 10)
+(state-define-state 4 :key "C-b" :in "a" :bound 1 :priority 5)
+(state-define-state 5 :key "C-b" :in "a" :bound 1 :priority 7)
+(assert-equal '(4) (mapcar 'state-name (state--select-states "C-b" 'default)))
 
-(state-define-state 3 :key "b" :in "a" :bound 1 :priority 10)
-(state-define-state 4 :key "b" :in "a" :bound 1 :priority 5)
-(state-define-state 5 :key "b" :in "a" :bound 1 :priority 7)
-(assert-equal '(4) (mapcar 'state-name (state--select-states "b" 'default)))
+(state-define-state 6 :key "C-c" :in "a" :bound 1 :priority 10)
+(state-define-state 7 :key "C-c" :in "a" :bound 1 :priority 5)
+(state-define-state 8 :key "C-c" :in "a" :bound 1 :priority 5)
+(assert-equal '(7 8) (sort (mapcar 'state-name (state--select-states "C-c" 'default)) '<))
 
-(state-define-state 6 :key "c" :in "a" :bound 1 :priority 10)
-(state-define-state 7 :key "c" :in "a" :bound 1 :priority 5)
-(state-define-state 8 :key "c" :in "a" :bound 1 :priority 5)
-(assert-equal '(7 8) (sort (mapcar 'state-name (state--select-states "c" 'default)) '<))
+
+(note "priority:unbound")
+(state-define-state  9 :key "C-d" :in "a" :priority 10)
+(state-define-state 10 :key "C-d" :in "a")
+(assert-equal '(9 10) (sort (mapcar 'state-name (state--select-states "C-d" 'default)) '<))
+
+(note "priority:bound and unbound")
+(state-define-state 11 :key "C-d" :in "a" :bound 1 :priority 9999)
+(assert-equal '(11) (sort (mapcar 'state-name (state--select-states "C-d" 'default)) '<))
+
 
 (end-tests)
