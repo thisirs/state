@@ -16,7 +16,7 @@ TESTS       = $(wildcard tests/*.el)
 TAR         = $(DIST)/state-$(VERSION).tar
 
 
-.PHONY: all install uninstall reinstall clean-all clean
+.PHONY: all install uninstall reinstall clean-all clean test
 all : $(PKG_DIR) $(TAR)
 
 install : $(TAR)
