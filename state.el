@@ -108,6 +108,9 @@ Slots:
               :before '(state--before-default 'default))
   "Default state when not in any other state.")
 
+(defconst state-min-priority -100000
+  "Lowest value of priority, ie. highest priority.")
+
 (defun state--filter (collection slot pred-or-value)
   "Return all states found in COLLECTION with SLOT's value satisfying PRED-OR-VALUE.
 
@@ -164,14 +167,14 @@ ARGS if supplied."
                                        (t
                                         (eval v)))))))
     (if bound
-        (let (bound-min state min)
-          (while (setq state (pop bound))
-            (cond ((eq min (state-priority state))
-                   (push state bound-min))
-                  ((and (not min) (< (state-priority state) min))
-                   (setq min (state-priority state))
-                   (setq bound-min (list state)))))
-          bound-min)
+        (cl-loop with min = nil
+                 for state in bound
+                 collect (cons (state-priority state) state) into pairs
+                 collect (state-priority state) into priorities
+                 finally return
+                 (mapcar 'cdr (cl-remove-if-not
+                               (lambda (pair) (= (apply 'min priorities) (car pair)))
+                               pairs)))
       unbound)))
 
 (defun state--do-switch (key)
@@ -295,7 +298,7 @@ key after switching. Leave nil is you don't want this feature."
     (if key
         (setf (state-key state) key)
       (error "No property key defined"))
-    (setf (state-priority state) priority)
+    (setf (state-priority state) (or priority state-min-priority))
     (setf (state-bound state) bound)
     (setf (state-keep state) keep)
     (setf (state-create state) (state--rewrite-create create in switch))
