@@ -51,8 +51,8 @@ properties.
   `gnus` state.
 - The `:switch` property is performing the actual switch.
 - The `:bound` property is used to make a state only accessible from
-another state. It is useful for example to have dedicated terminal
-buffer for a project.
+  another state. It is useful for example to have dedicated terminal
+  buffer for a project.
 
 ## Examples
 
