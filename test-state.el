@@ -15,39 +15,39 @@
                               :key "0"
                               :in fake)))
 
-(state-define-state in-directory
+(defmacro setq-state (var &rest args)
+  "[Test helper]Define state and set it to VAR"
+  `(progn
+     (state-define-state ,var ,@args)
+     (setq ,var (state--get-state-by-name ',var))))
+(put 'setq-state 'lisp-indent-function 1)
+
+(setq-state in-directory
   :key "a"
   :in "~/.emacs.d/")
-(state-define-state in-file
+(setq-state in-file
   :key "b"
   :in "~/.emacs.d/init.el")
-(state-define-state switch-file
+(setq-state switch-file
   :key "c"
   :switch "~/.emacs.d/init.el")
-(state-define-state switch-buf
+(setq-state switch-buf
   :key "c"
   :switch "*scratch*")
-(state-define-state in-sexp
+(setq-state in-sexp
   :key "d"
   :in (sexp))
-(state-define-state in-and-switch
+(setq-state in-and-switch
   :key "e"
   :in "in"
   :switch "switch")
-(state-define-state create-in-exist-switch-before
+(setq-state create-in-exist-switch-before
   :key "f"
   :create func-create
   :in func-in
   :exist func-exist
   :switch func-switch
   :before func-before)
-(setq in-directory (state--get-state-by-name 'in-directory))
-(setq in-file (state--get-state-by-name 'in-file))
-(setq switch-file (state--get-state-by-name 'switch-file))
-(setq switch-buf (state--get-state-by-name 'switch-buf))
-(setq in-sexp (state--get-state-by-name 'in-sexp))
-(setq in-and-switch (state--get-state-by-name 'in-and-switch))
-(setq create-in-exist-switch-before (state--get-state-by-name 'create-in-exist-switch-before))
 
 (note "state-define-state:state-key")
 (assert-raises error
