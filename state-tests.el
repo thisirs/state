@@ -167,5 +167,43 @@
 (state--do-switch "A")
 (assert-equal another-switch-buf (state--get-state-in))
 
+(note "state--do-switch: call flow")
+
+(setq-state exist-test-state
+  :key "B"
+  :exist  (progn (push 'Bexist flow) t)
+  :switch (push 'Bswitch flow)
+  :before (push 'Bbefore flow)
+  :create (push 'Bcreate flow)
+  :in     (push 'Bin flow)
+  :switch (push 'Bswitch flow))
+(setq-state not-exist-in-state
+  :key "C"
+  :exist  (progn (push 'Cexist flow) nil)
+  :switch (push 'Cswitch flow)
+  :before (push 'Cbefore flow)
+  :create (push 'Ccreate flow)
+  :in     (progn (push 'Cin flow) t)
+  :switch (push 'Cswitch flow))
+(setq-state not-exist-not-in-state
+  :key "D"
+  :exist  (progn (push 'Dexist flow) nil)
+  :switch (push 'Dswitch flow)
+  :before (push 'Dbefore flow)
+  :create (push 'Dcreate flow)
+  :in     (progn (push 'Din flow) nil)
+  :switch (push 'Dswitch flow))
+
+(cl-letf (((symbol-function 'state--get-state-in)
+           (lambda () state--default-state)))
+  (let (flow)                            ;
+    (state--do-switch (state-key exist-test-state))
+    (assert-equal '(Bexist Bswitch Bbefore) (reverse flow)))
+  (let (flow)
+    (state--do-switch (state-key not-exist-in-state))
+    (assert-equal '(Cexist Ccreate Cin Cbefore) (reverse flow)))
+  (let (flow)
+    (state--do-switch (state-key not-exist-not-in-state))
+    (assert-equal '(Dexist Dcreate Din Dswitch Dbefore) (reverse flow))))
 
 (end-tests)
