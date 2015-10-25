@@ -173,22 +173,25 @@ ARGS if supplied."
 (defun state--do-switch (key)
   "Perform the switch process when KEY is pressed."
   (let* ((from (state--get-state-in))
-         ;; States we might switch to; special case if current state
-         ;; is the state we want to switch to (ie switch back)
-         (states (if (equal key (state-key from))
-                     (list from)
-                   (state--select-states key (state-name from))))
-         (to (cond ((not states)
-                    (error "Non-existent state"))
-                   ((= 1 (length states))
-                    (car states))
-                   (t
-                    (state--get-state-by-name
-                     (completing-read "Choose state: " (mapcar 'state-name states)
-                                      nil t))))))
+         (to (state--choose-state-to-switch key from)))
     (if (eq to from)
         (state--switch-back from)
       (state--switch-to to from))))
+
+(defun state--choose-state-to-switch (key from)
+  ;; States we might switch to; special case if current state
+  ;; is the state we want to switch to (ie switch back)
+  (let ((states (if (equal key (state-key from))
+                    (list from)
+                  (state--select-states key (state-name from)))))
+    (cond ((not states)
+           (error "Non-existent state"))
+          ((= 1 (length states))
+           (car states))
+          (t
+           (state--get-state-by-name
+            (completing-read "Choose state: " (mapcar 'state-name states)
+                             nil t))))))
 
 (defun state--switch-back (from)
   (state-call from 'before)
