@@ -186,11 +186,9 @@ ARGS if supplied."
                     (state--get-state-by-name
                      (completing-read "Choose state: " (mapcar 'state-name states)
                                       nil t))))))
-    ;; Test if we are switching back
-    (cond ((eq to from)
-           (state--switch-back from))
-          (t
-           (state--switch-to to from)))))
+    (if (eq to from)
+        (state--switch-back from)
+      (state--switch-to to from))))
 
 (defun state--switch-back (from)
   (state-call from 'before)
