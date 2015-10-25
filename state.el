@@ -161,8 +161,7 @@ ARGS if supplied."
                                        (t
                                         (eval v)))))))
     (if bound
-        (cl-loop with min = nil
-                 for state in bound
+        (cl-loop for state in bound
                  collect (cons (state-priority state) state) into pairs
                  collect (state-priority state) into priorities
                  finally return
