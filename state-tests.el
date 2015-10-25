@@ -34,20 +34,20 @@
   :switch "~/.emacs.d/init.el")
 
 (setq-state switch-buf
-  :key "c"
+  :key "d"
   :switch "*scratch*")
 
 (setq-state in-sexp
-  :key "d"
+  :key "e"
   :in (ignore 1))
 (setq-state in-and-switch
-  :key "e"
+  :key "f"
   :in "in"
   :switch "switch")
 
 (fset 'func-in 'ignore)
 (setq-state create-in-exist-switch-before
-  :key "f"
+  :key "g"
   :create func-create
   :in func-in
   :exist func-exist
