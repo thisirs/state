@@ -25,24 +25,29 @@
 (setq-state in-directory
   :key "a"
   :in "~/.emacs.d/")
+
 (setq-state in-file
   :key "b"
   :in "~/.emacs.d/init.el")
 (setq-state switch-file
   :key "c"
   :switch "~/.emacs.d/init.el")
+
 (setq-state switch-buf
-  :key "c"
-  :switch "*scratch*")
-(setq-state in-sexp
   :key "d"
-  :in (sexp))
-(setq-state in-and-switch
+  :switch "*scratch*")
+
+(setq-state in-sexp
   :key "e"
+  :in (ignore 1))
+(setq-state in-and-switch
+  :key "f"
   :in "in"
   :switch "switch")
+
+(fset 'func-in 'ignore)
 (setq-state create-in-exist-switch-before
-  :key "f"
+  :key "g"
   :create func-create
   :in func-in
   :exist func-exist
@@ -138,5 +143,67 @@
 (state-define-state 11 :key "C-d" :in "a" :bound 1 :priority 9999)
 (assert-equal '(11) (sort (mapcar 'state-name (state--select-states "C-d" 'default)) '<))
 
+(note "state--get-state-in")
+(set-buffer "*scratch*")
+(assert-equal switch-buf (state--get-state-in))
+
+(note "state--do-switch: new state")
+(setq-state another-switch-buf
+  :key "A"
+  :switch "*another-scratch*")
+(setq scratch-winconf (current-window-configuration))
+(state--do-switch "A")
+(assert-equal another-switch-buf (state--get-state-in))
+;; save previous state to origin
+(assert-equal 'switch-buf (state-origin another-switch-buf))
+;; save window configuration before switching state
+(assert-equal scratch-winconf (state-current switch-buf))
+
+(note "state--do-switch: same state (switch to previous state)")
+(state--do-switch "A")
+(assert-equal switch-buf (state--get-state-in))
+
+(note "state--do-switch: switch back")
+(state--do-switch "A")
+(assert-equal another-switch-buf (state--get-state-in))
+
+(note "state--do-switch: call flow")
+
+(setq-state exist-test-state
+  :key "B"
+  :exist  (progn (push 'Bexist flow) t)
+  :switch (push 'Bswitch flow)
+  :before (push 'Bbefore flow)
+  :create (push 'Bcreate flow)
+  :in     (push 'Bin flow)
+  :switch (push 'Bswitch flow))
+(setq-state not-exist-in-state
+  :key "C"
+  :exist  (progn (push 'Cexist flow) nil)
+  :switch (push 'Cswitch flow)
+  :before (push 'Cbefore flow)
+  :create (push 'Ccreate flow)
+  :in     (progn (push 'Cin flow) t)
+  :switch (push 'Cswitch flow))
+(setq-state not-exist-not-in-state
+  :key "D"
+  :exist  (progn (push 'Dexist flow) nil)
+  :switch (push 'Dswitch flow)
+  :before (push 'Dbefore flow)
+  :create (push 'Dcreate flow)
+  :in     (progn (push 'Din flow) nil)
+  :switch (push 'Dswitch flow))
+
+(cl-letf (((symbol-function 'state--get-state-in)
+           (lambda () state--default-state)))
+  (let (flow)                            ;
+    (state--do-switch (state-key exist-test-state))
+    (assert-equal '(Bexist Bswitch Bbefore) (reverse flow)))
+  (let (flow)
+    (state--do-switch (state-key not-exist-in-state))
+    (assert-equal '(Cexist Ccreate Cin Cbefore) (reverse flow)))
+  (let (flow)
+    (state--do-switch (state-key not-exist-not-in-state))
+    (assert-equal '(Dexist Dcreate Din Dswitch Dbefore) (reverse flow))))
 
 (end-tests)

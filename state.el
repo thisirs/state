@@ -120,12 +120,11 @@ first argument. Otherwise, compare slot's value with `equal'."
     (error "Unknown slot name: %s" slot))
   (let ((predicate (if (functionp pred-or-value)
                        pred-or-value
-                     (lambda (v) (equal pred-or-value v))))
-        state result)
-    (while (setq state (pop collection))
-      (if (funcall predicate (funcall (intern (format "state-%s" slot)) state))
-          (push state result)))
-    result))
+                     (lambda (v) (equal pred-or-value v)))))
+    (cl-remove-if-not
+     (lambda (state)
+       (funcall predicate (funcall (intern (format "state-%s" slot)) state)))
+     collection)))
 
 (defun state--get-state-by-name (name)
   "Return a state object with name NAME found in `state--states'.
@@ -134,17 +133,12 @@ If NAME is equal to `default', return the default state
 `state--default-state', nil otherwise."
   (if (eq name 'default)
       state--default-state
-    (let ((states state--states) state)
-      (while (and (setq state (pop states))
-                  (not (eq name (state-name state)))))
-      state)))
+    (cl-find-if (lambda (state) (eq name (state-name state))) state--states)))
 
 (defun state--get-state-in ()
   "Return the current state or default state if not in any."
-  (let ((states state--states) state)
-    (while (and (setq state (pop states))
-                (not (state-call state 'in))))
-    (or state state--default-state)))
+  (or (cl-find-if (lambda (state) (state-call state 'in)) state--states)
+      state--default-state))
 
 (defun state-call (state slot &rest args)
   "Call or eval the value of slot SLOT in state STATE. Call with
@@ -192,9 +186,8 @@ ARGS if supplied."
                     (car states))
                    (t
                     (state--get-state-by-name
-                     (intern
-                      (completing-read "Choose state: "
-                                       (mapcar (lambda (s) (cons (state-name s) s)) states) nil t))))))
+                     (completing-read "Choose state: " (mapcar 'state-name states)
+                                      nil t)))))
          (to-name (state-name to)))
     ;; Test if we are switching back
     (cond ((eq to-name from-name)
