@@ -134,10 +134,7 @@ If NAME is equal to `default', return the default state
 `state--default-state', nil otherwise."
   (if (eq name 'default)
       state--default-state
-    (let ((states state--states) state)
-      (while (and (setq state (pop states))
-                  (not (eq name (state-name state)))))
-      state)))
+    (cl-find-if (lambda (state) (eq name (state-name state))) state--states)))
 
 (defun state--get-state-in ()
   "Return the current state or default state if not in any."
