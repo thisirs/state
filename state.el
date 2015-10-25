@@ -176,7 +176,7 @@ ARGS if supplied."
          (to (state--choose-state-to-switch key from)))
     (if (eq to from)
         (state--switch-back from)
-      (state--switch-to to from))))
+      (state--switch-to to from key))))
 
 (defun state--choose-state-to-switch (key from)
   ;; States we might switch to; special case if current state
@@ -206,7 +206,7 @@ ARGS if supplied."
               (message "Back to default state")
             (message "Back to `%s' state" origin)))))))
 
-(defun state--switch-to (to from)
+(defun state--switch-to (to from key)
   ;; Not switching back but switching to, so save original state
   (setf (state-origin to) (state-name from))
 
