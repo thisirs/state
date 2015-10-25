@@ -188,46 +188,52 @@ ARGS if supplied."
                                       nil t))))))
     ;; Test if we are switching back
     (cond ((eq to from)
-           (state-call from 'before)
-           (let ((origin (state-origin from)))
-             (if (not origin)
-                 (user-error "Not coming from anywhere")
-               (let ((wconf (state-current (state--get-state-by-name origin))))
-                 (if (not (window-configuration-p wconf))
-                     (user-error "No wconf stored for `%s' state" origin)
-                   (set-window-configuration wconf)
-                   (if (eq origin 'default)
-                       (message "Back to default state")
-                     (message "Back to `%s' state" origin)))))))
+           (state--switch-back from))
           (t
-           ;; Not switching back but switching to, so save original state
-           (setf (state-origin to) (state-name from))
+           (state--switch-to to from)))))
 
-           ;; Save current wconf to restore it if we switch back
-           (setf (state-current from) (current-window-configuration))
+(defun state--switch-back (from)
+  (state-call from 'before)
+  (let ((origin (state-origin from)))
+    (if (not origin)
+        (user-error "Not coming from anywhere")
+      (let ((wconf (state-current (state--get-state-by-name origin))))
+        (if (not (window-configuration-p wconf))
+            (user-error "No wconf stored for `%s' state" origin)
+          (set-window-configuration wconf)
+          (if (eq origin 'default)
+              (message "Back to default state")
+            (message "Back to `%s' state" origin)))))))
 
-           ;; Executes any other user defined "before" form
-           (state-call from 'before)
+(defun state--switch-to (to from)
+  ;; Not switching back but switching to, so save original state
+  (setf (state-origin to) (state-name from))
 
-           (cond ((state-call to 'exist)
-                  (state-call to 'switch)
-                  (state-call to 'before))
-                 (t
-                  (state-call to 'create)
-                  (unless (state-call to 'in)
-                    (state-call to 'switch))
-                  (state-call to 'before)))
-           (message "Switched to `%s' state" (state-name to))
+  ;; Save current wconf to restore it if we switch back
+  (setf (state-current from) (current-window-configuration))
 
-           ;; If keep in non-nil install transient keymap
-           (if (state-keep to)
-               (set-transient-map
-                (let ((map (make-sparse-keymap)))
-                  (define-key map (kbd key)
-                    (lambda ()
-                      (interactive)
-                      (state-call to 'keep to)))
-                  map) t))))))
+  ;; Executes any other user defined "before" form
+  (state-call from 'before)
+
+  (cond ((state-call to 'exist)
+         (state-call to 'switch)
+         (state-call to 'before))
+        (t
+         (state-call to 'create)
+         (unless (state-call to 'in)
+           (state-call to 'switch))
+         (state-call to 'before)))
+  (message "Switched to `%s' state" (state-name to))
+
+  ;; If keep in non-nil install transient keymap
+  (if (state-keep to)
+      (set-transient-map
+       (let ((map (make-sparse-keymap)))
+         (define-key map (kbd key)
+           (lambda ()
+             (interactive)
+             (state-call to 'keep to)))
+         map) t)))
 
 ;;;###autoload
 (defmacro state-define-state (name &rest args)
