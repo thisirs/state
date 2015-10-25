@@ -120,8 +120,7 @@ first argument. Otherwise, compare slot's value with `equal'."
     (error "Unknown slot name: %s" slot))
   (let ((predicate (if (functionp pred-or-value)
                        pred-or-value
-                     (lambda (v) (equal pred-or-value v))))
-        state result)
+                     (lambda (v) (equal pred-or-value v)))))
     (cl-remove-if-not
      (lambda (state)
        (funcall predicate (funcall (intern (format "state-%s" slot)) state)))
