@@ -138,10 +138,8 @@ If NAME is equal to `default', return the default state
 
 (defun state--get-state-in ()
   "Return the current state or default state if not in any."
-  (let ((states state--states) state)
-    (while (and (setq state (pop states))
-                (not (state-call state 'in))))
-    (or state state--default-state)))
+  (or (cl-find-if (lambda (state) (state-call state 'in)) state--states)
+      state--default-state))
 
 (defun state-call (state slot &rest args)
   "Call or eval the value of slot SLOT in state STATE. Call with
