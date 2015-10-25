@@ -44,6 +44,7 @@
   :key "e"
   :in "in"
   :switch "switch")
+
 (fset 'func-in 'ignore)
 (setq-state create-in-exist-switch-before
   :key "f"
@@ -141,5 +142,16 @@
 (note "priority:bound and unbound")
 (state-define-state 11 :key "C-d" :in "a" :bound 1 :priority 9999)
 (assert-equal '(11) (sort (mapcar 'state-name (state--select-states "C-d" 'default)) '<))
+
+(note "state--get-state-in")
+(set-buffer "*scratch*")
+(assert-equal switch-buf (state--get-state-in))
+
+(note "state--do-switch")
+(setq-state another-switch-buf
+  :key "A"
+  :switch "*another-scratch*")
+(state--do-switch "A")
+(assert-equal another-switch-buf (state--get-state-in))
 
 (end-tests)
