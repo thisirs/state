@@ -186,9 +186,8 @@ ARGS if supplied."
                     (car states))
                    (t
                     (state--get-state-by-name
-                     (intern
-                      (completing-read "Choose state: "
-                                       (mapcar (lambda (s) (cons (state-name s) s)) states) nil t))))))
+                     (completing-read "Choose state: " (mapcar 'state-name states)
+                                      nil t)))))
          (to-name (state-name to)))
     ;; Test if we are switching back
     (cond ((eq to-name from-name)
