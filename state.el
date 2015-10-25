@@ -122,10 +122,10 @@ first argument. Otherwise, compare slot's value with `equal'."
                        pred-or-value
                      (lambda (v) (equal pred-or-value v))))
         state result)
-    (while (setq state (pop collection))
-      (if (funcall predicate (funcall (intern (format "state-%s" slot)) state))
-          (push state result)))
-    result))
+    (cl-remove-if-not
+     (lambda (state)
+       (funcall predicate (funcall (intern (format "state-%s" slot)) state)))
+     collection)))
 
 (defun state--get-state-by-name (name)
   "Return a state object with name NAME found in `state--states'.
