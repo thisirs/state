@@ -173,12 +173,11 @@ ARGS if supplied."
 (defun state--do-switch (key)
   "Perform the switch process when KEY is pressed."
   (let* ((from (state--get-state-in))
-         (from-name (state-name from))
          ;; States we might switch to; special case if current state
          ;; is the state we want to switch to (ie switch back)
          (states (if (equal key (state-key from))
                      (list from)
-                   (state--select-states key from-name)))
+                   (state--select-states key (state-name from))))
          (to (cond ((not states)
                     (error "Non-existent state"))
                    ((= 1 (length states))
@@ -186,10 +185,9 @@ ARGS if supplied."
                    (t
                     (state--get-state-by-name
                      (completing-read "Choose state: " (mapcar 'state-name states)
-                                      nil t)))))
-         (to-name (state-name to)))
+                                      nil t))))))
     ;; Test if we are switching back
-    (cond ((eq to-name from-name)
+    (cond ((eq to from)
            (state-call from 'before)
            (let ((origin (state-origin from)))
              (if (not origin)
@@ -203,7 +201,7 @@ ARGS if supplied."
                      (message "Back to `%s' state" origin)))))))
           (t
            ;; Not switching back but switching to, so save original state
-           (setf (state-origin to) from-name)
+           (setf (state-origin to) (state-name from))
 
            ;; Save current wconf to restore it if we switch back
            (setf (state-current from) (current-window-configuration))
