@@ -147,11 +147,25 @@
 (set-buffer "*scratch*")
 (assert-equal switch-buf (state--get-state-in))
 
-(note "state--do-switch")
+(note "state--do-switch: new state")
 (setq-state another-switch-buf
   :key "A"
   :switch "*another-scratch*")
+(setq scratch-winconf (current-window-configuration))
 (state--do-switch "A")
 (assert-equal another-switch-buf (state--get-state-in))
+;; save previous state to origin
+(assert-equal 'switch-buf (state-origin another-switch-buf))
+;; save window configuration before switching state
+(assert-equal scratch-winconf (state-current switch-buf))
+
+(note "state--do-switch: same state (switch to previous state)")
+(state--do-switch "A")
+(assert-equal switch-buf (state--get-state-in))
+
+(note "state--do-switch: switch back")
+(state--do-switch "A")
+(assert-equal another-switch-buf (state--get-state-in))
+
 
 (end-tests)
