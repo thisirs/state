@@ -25,22 +25,26 @@
 (setq-state in-directory
   :key "a"
   :in "~/.emacs.d/")
+
 (setq-state in-file
   :key "b"
   :in "~/.emacs.d/init.el")
 (setq-state switch-file
   :key "c"
   :switch "~/.emacs.d/init.el")
+
 (setq-state switch-buf
   :key "c"
   :switch "*scratch*")
+
 (setq-state in-sexp
   :key "d"
-  :in (sexp))
+  :in (ignore 1))
 (setq-state in-and-switch
   :key "e"
   :in "in"
   :switch "switch")
+(fset 'func-in 'ignore)
 (setq-state create-in-exist-switch-before
   :key "f"
   :create func-create
@@ -137,6 +141,5 @@
 (note "priority:bound and unbound")
 (state-define-state 11 :key "C-d" :in "a" :bound 1 :priority 9999)
 (assert-equal '(11) (sort (mapcar 'state-name (state--select-states "C-d" 'default)) '<))
-
 
 (end-tests)
