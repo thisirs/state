@@ -111,6 +111,11 @@ Slots:
 (defconst state-min-priority -100000
   "Lowest value of priority, ie. highest priority.")
 
+(defun state--message (msg &rest args)
+  (if (minibufferp)
+      (apply #'minibuffer-message msg args)
+    (apply #'message msg args)))
+
 (defun state--filter (collection slot pred-or-value)
   "Return all states found in COLLECTION with SLOT's value satisfying PRED-OR-VALUE.
 
@@ -203,8 +208,8 @@ ARGS if supplied."
             (user-error "No wconf stored for `%s' state" origin)
           (set-window-configuration wconf)
           (if (eq origin 'default)
-              (message "Back to default state")
-            (message "Back to `%s' state" origin)))))))
+              (state--message "Back to default state")
+            (state--message "Back to `%s' state" origin)))))))
 
 (defun state--switch-to (to from key)
   ;; Not switching back but switching to, so save original state
@@ -224,7 +229,7 @@ ARGS if supplied."
          (unless (state-call to 'in)
            (state-call to 'switch))
          (state-call to 'before)))
-  (message "Switched to `%s' state" (state-name to))
+  (state--message "Switched to `%s' state" (state-name to))
 
   ;; If keep in non-nil install transient keymap
   (if (state-keep to)
