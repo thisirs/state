@@ -111,6 +111,7 @@ Some examples taken from my [emacs configuration](https://github.com/thisirs/dot
              gnus-group-mode
              gnus-summary-mode
              gnus-article-mode))
+ :exist gnus-alive-p
  :create gnus)
 ```
 - For ERC users, switching to ERC and cycling through ERC buffers by
