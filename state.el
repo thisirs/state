@@ -285,6 +285,7 @@ infinite priority.
 
 :keep A form or function that is called if we keep pressing the
 key after switching. Leave nil is you don't want this feature."
+  (declare (indent 1))
   (let ((state (or (state--get-state-by-name name) (make-state)))
         (key (plist-get args :key))
         (switch (plist-get args :switch))
@@ -314,7 +315,7 @@ key after switching. Leave nil is you don't want this feature."
 
     ;; Bind if it is not already
     (state--write-define-key name key)))
-(put 'state-define-state 'lisp-indent-function 1)
+(put 'state-define-state 'lisp-indent-function 'defun)
 
 (defun state--rewrite-create (create in switch)
   "Return a modified CREATE propery based on IN or SWITCH.
