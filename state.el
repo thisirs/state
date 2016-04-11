@@ -285,7 +285,7 @@ infinite priority.
 
 :keep A form or function that is called if we keep pressing the
 key after switching. Leave nil is you don't want this feature."
-  (declare (indent 1))
+  (declare (indent defun))
   (let ((state (or (state--get-state-by-name name) (make-state)))
         (key (plist-get args :key))
         (switch (plist-get args :switch))
@@ -295,7 +295,8 @@ key after switching. Leave nil is you don't want this feature."
         (priority (plist-get args :priority))
         (exist (plist-get args :exist))
         (keep (plist-get args :keep))
-        (create (plist-get args :create)))
+        (create (plist-get args :create))
+        (defun-sym (intern (format "state--switch-to-%s" name))))
 
     (setf (state-name state) name)
     (if key
@@ -310,12 +311,18 @@ key after switching. Leave nil is you don't want this feature."
     (setf (state-switch state) (state--rewrite-switch switch name in))
     (setf (state-before state) (state--rewrite-before before name))
 
-    ;; Add to list of states
-    (add-to-list 'state--states state)
+    `(progn
+       (if (state--get-state-by-name ',name)
+           (add-to-list 'state--states ,state))
 
-    ;; Bind if it is not already
-    (state--write-define-key name key)))
-(put 'state-define-state 'lisp-indent-function 'defun)
+       ;; Define command switching to NAME
+       (defun ,defun-sym ()
+         ,(format "Switch to state `%s'" name)
+         (interactive)
+         (state--do-switch ,key))
+
+       ;; And bind it to KEY
+       (define-key state-prefix-map (kbd ,key) ',defun-sym))))
 
 (defun state--rewrite-create (create in switch)
   "Return a modified CREATE propery based on IN or SWITCH.
@@ -434,13 +441,6 @@ Store the current window configuration in the slot curent."
   (let ((state (state--get-state-by-name name)))
     (when state
       (setf (state-current state) (current-window-configuration)))))
-
-(defun state--write-define-key (name key)
-  `(define-key state-prefix-map (kbd ,key)
-     (lambda ()
-       ,(format "Switch to state `%s'" name)
-       (interactive) (state--do-switch ,key))))
-
 
 ;;; Minor mode
 (defvar state-prefix-map (make-sparse-keymap)
