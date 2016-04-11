@@ -184,8 +184,11 @@ ARGS if supplied."
       (state--switch-to to from key))))
 
 (defun state--choose-state-to-switch (key from)
-  ;; States we might switch to; special case if current state
-  ;; is the state we want to switch to (ie switch back)
+  "Return state to switch to by pressing KEY when coming from FROM.
+
+Return FROM if we are switching back. Otherwise, return state
+described by KEY, asking the user if there is more than one
+state."
   (let ((states (if (equal key (state-key from))
                     (list from)
                   (state--select-states key (state-name from)))))
@@ -199,6 +202,7 @@ ARGS if supplied."
                              nil t))))))
 
 (defun state--switch-back (from)
+  "Perform the actual switch back to state FROM."
   (state-call from 'before)
   (let ((origin (state-origin from)))
     (if (not origin)
@@ -212,6 +216,8 @@ ARGS if supplied."
             (state--message "Back to `%s' state" origin)))))))
 
 (defun state--switch-to (to from key)
+  "Perform the actual switch to state TO coming from FROM by
+pressing KEY."
   ;; Not switching back but switching to, so save original state
   (setf (state-origin to) (state-name from))
 
@@ -358,6 +364,8 @@ they are strings. Otherwise leave nil."
          (error "No :in property or not able to infer one"))))
 
 (defun state--buffer-file-name-prefix-p (buf prefix)
+  "Return true if buffer BUF is visiting a file whose filename is
+prefixed by PREFIX. If no filename, use `default-directory' instead."
   (with-current-buffer buf
     (string-prefix-p
      (file-truename prefix)
@@ -371,7 +379,6 @@ they are strings. Otherwise leave nil."
 
 (defun state--in-switch-buffer (switch)
   (eq (current-buffer) (get-buffer switch)))
-
 
 (defun state--rewrite-exist (exist in switch)
   "Return a modified EXIST property based on IN or SWITCH.
