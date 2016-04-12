@@ -318,7 +318,7 @@ key after switching. Leave nil is you don't want this feature."
     (setf (state-before state) (state--rewrite-before before name))
 
     `(progn
-       (if (state--get-state-by-name ',name)
+       (unless (state--get-state-by-name ',name)
            (add-to-list 'state--states ,state))
 
        ;; Define command switching to NAME
