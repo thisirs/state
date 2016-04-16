@@ -247,7 +247,8 @@ pressing KEY."
              (state-call to 'keep to)))
          map) t)))
 
-;;;###autoload
+;;; Autoload as a defun to avoid too early autoloading
+;;;###autoload (autoload 'state-define-state "state")
 (defmacro state-define-state (name &rest args)
   "Define a new state named NAME with property list ARGS.
 
