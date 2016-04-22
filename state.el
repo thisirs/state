@@ -316,6 +316,7 @@ key after switching. Leave nil is you don't want this feature."
     (setf (state-exist state) (state--rewrite-exist exist in switch))
     (setf (state-switch state) (state--rewrite-switch switch name in))
     (setf (state-before state) (state--rewrite-before before name))
+    (setf (state-current state) nil)
 
     `(progn
        (unless (state--get-state-by-name ',name)
