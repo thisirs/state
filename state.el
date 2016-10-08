@@ -136,6 +136,7 @@ first argument. Otherwise, compare slot's value with `equal'."
 
 If NAME is equal to `default', return the default state
 `state--default-state', nil otherwise."
+  (if (stringp name) (setq name (intern name)))
   (if (eq name 'default)
       state--default-state
     (cl-find-if (lambda (state) (eq name (state-name state))) state--states)))
