@@ -1,6 +1,6 @@
 ;;; state.el --- Quick navigation between workspaces  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2013-2016 Sylvain Rousseau <thisirs at gmail dot com>
+;; Copyright (C) 2013-2017 Sylvain Rousseau <thisirs at gmail dot com>
 
 ;; Author: Sylvain Rousseau <thisirs at gmail dot com>
 ;; Keywords: convenience, workspaces
