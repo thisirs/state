@@ -452,8 +452,20 @@ Store the current window configuration in the slot curent."
     (when state
       (setf (state-current state) (current-window-configuration)))))
 
+(defun state-mode-default-state (&optional arg)
+  "Called when a keystroke is not bound to a state."
+  (interactive "P")
+  (if arg
+      (eval `(state-define-state ,(format "inline-%S" last-input-event)
+               :key ,(char-to-string last-input-event)
+              :switch ,(buffer-name)))
+    (message "Undefined state")))
+
 ;;; Minor mode
-(defvar state-prefix-map (make-sparse-keymap)
+(defvar state-prefix-map
+  (let ((keymap (make-sparse-keymap)))
+    (define-key keymap [t] #'state-mode-default-state)
+    keymap)
   "Prefix map for state mode.")
 
 (defvar state-mode-map
