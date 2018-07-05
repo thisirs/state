@@ -5,7 +5,7 @@ workspaces. It allows you for example to press <kbd>C-c s g</kbd> to
 switch to `gnus` in fullscreen. When you are done with `gnus` your can
 switch back to where you were by pressing the same keystroke.
 Similarly, you can take a quick peek at your `*Messages*` buffer by
-pressing <kbd>s-s m</kbd> and return to where you were by pressing the
+pressing <kbd>C-s s m</kbd> and return to where you were by pressing the
 same keystroke.
 
 ## Installation
