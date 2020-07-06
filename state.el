@@ -369,10 +369,9 @@ they are strings. Otherwise leave nil."
 (defun state--buffer-file-name-prefix-p (buf prefix)
   "Return true if buffer BUF is visiting a file whose filename is
 prefixed by PREFIX. If no filename, use `default-directory' instead."
-  (with-current-buffer buf
-    (string-prefix-p
-     (file-truename prefix)
-     (file-truename (or (buffer-file-name) default-directory "/")))))
+  (string-prefix-p
+   (file-truename prefix)
+   (file-truename (or (buffer-file-name buf) default-directory "/"))))
 
 (defun state--in-in-file (in)
   (state--buffer-file-name-prefix-p (current-buffer) in))
