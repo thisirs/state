@@ -371,7 +371,10 @@ they are strings. Otherwise leave nil."
 prefixed by PREFIX. If no filename, use `default-directory' instead."
   (string-prefix-p
    (file-truename prefix)
-   (file-truename (or (buffer-file-name buf) default-directory "/"))))
+   (let ((bfn (or (buffer-file-name buf) default-directory "/")))
+     (if (file-remote-p bfn)
+         bfn
+         (file-truename bfn)))))
 
 (defun state--in-in-file (in)
   (state--buffer-file-name-prefix-p (current-buffer) in))
