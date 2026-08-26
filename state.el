@@ -294,6 +294,7 @@ infinite priority.
 :keep A form or function that is called if we keep pressing the
 key after switching. Leave nil is you don't want this feature."
   (declare (indent defun))
+  (if (stringp name) (setq name (intern name)))
   (let ((state (or (state--get-state-by-name name) (make-state)))
         (key (plist-get args :key))
         (switch (plist-get args :switch))
