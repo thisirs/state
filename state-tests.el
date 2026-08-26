@@ -6,14 +6,21 @@
 
 (note "state-define-state")
 
-(assert-equal '(define-key state-prefix-map (kbd "0")
-                 (lambda ()
+(let ((expansion (macroexpand '(state-define-state test
+                                 :key "0"
+                                 :in fake))))
+  ;; The expansion registers the (already populated) struct, defines a command
+  ;; and binds it. The struct literal is not worth pinning down here; the
+  ;; per-slot tests below cover it.
+  (assert-equal 'progn (car expansion))
+  (assert-equal 'add-to-list (car (nth 2 (nth 1 expansion))))
+  (assert-equal '(defun state--switch-to-test ()
                    "Switch to state `test'"
                    (interactive)
-                   (state--do-switch "0")))
-              (macroexpand '(state-define-state test
-                              :key "0"
-                              :in fake)))
+                   (state--do-switch "0"))
+                (nth 2 expansion))
+  (assert-equal '(define-key state-prefix-map (kbd "0") 'state--switch-to-test)
+                (nth 3 expansion)))
 
 (defmacro setq-state (var &rest args)
   "[Test helper]Define state and set it to VAR"
@@ -56,7 +63,10 @@
 
 (note "state-define-state:state-key")
 (assert-raises error
-               (state-define-state no-key :switch func-switch)
+               ;; Quoted + `eval' so the expansion-time error is signalled
+               ;; at run time, inside the handler `assert-raises' installs,
+               ;; rather than during the eager macro-expansion done by `load'.
+               (eval '(state-define-state no-key :switch func-switch) t)
                "no key")
 (assert-equal "a" (state-key in-directory))
 
@@ -86,9 +96,10 @@
 (assert-equal '(state--in-in-file "in")
               (state-in in-and-switch))
 (assert-raises error
-               (state-define-state err
-                 :key "E"
-                 :switch func)
+               (eval '(state-define-state err
+                        :key "E"
+                        :switch func)
+                     t)
                "no in")
 
 (note "state-define-state:state-exist")
@@ -157,7 +168,13 @@
 ;; save previous state to origin
 (assert-equal 'switch-buf (state-origin another-switch-buf))
 ;; save window configuration before switching state
-(assert-equal scratch-winconf (state-current switch-buf))
+;; NB: `equal' on two window configurations is nil even when they describe
+;; the same layout, so compare them with `compare-window-configurations'.
+(assert-t (window-configuration-p (state-current switch-buf))
+          "a window configuration was saved")
+(assert-t (compare-window-configurations scratch-winconf
+                                         (state-current switch-buf))
+          "saved window configuration is the one from before the switch")
 
 (note "state--do-switch: same state (switch to previous state)")
 (state--do-switch "A")
