@@ -434,7 +434,9 @@ they are strings. Otherwise leave nil."
   (if current-prefix-arg
       (switch-to-buffer-other-window
        (find-file-noselect switch))
-    (find-file-existing switch)))
+    ;; Not `find-file-existing': the file may not exist yet, :create has
+    ;; just made a buffer for it.
+    (find-file switch)))
 
 (defun state--switch-switch-buffer (switch)
   (if current-prefix-arg

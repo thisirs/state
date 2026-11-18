@@ -275,6 +275,20 @@
 (assert-nil (state-call (state--get-state-by-name 'exist-file) 'exist)
             "does not exist once the buffer is killed")
 
+(note "state--switch-switch-file: file not on disk yet")
+(setq new-file (concat prefix-root "new.org"))
+(eval `(state-define-state new-file :key "N" :switch ,new-file) t)
+;; Only this state is visible: the call-flow states above have :in forms
+;; that need a `flow' binding.
+(let ((state--states (list (state--get-state-by-name 'new-file))))
+  (switch-to-buffer prefix-other-buf)
+  (assert-nil (condition-case err (progn (state--do-switch "N") nil)
+                (error err))
+              "switching signals no error")
+  (assert-equal new-file (buffer-file-name (window-buffer))
+                "switched to a buffer visiting the new file"))
+(kill-buffer (find-buffer-visiting new-file))
+
 (mapc #'kill-buffer (list prefix-sibling-buf prefix-dired-buf prefix-other-buf))
 (delete-directory prefix-root t)
 
