@@ -36,6 +36,9 @@ could have specified the path of a file as well. Pressing <kbd>C-c s
 m</kbd> switches to the `*Messages*` buffer. Pressing it again
 switches back to where you were.
 
+Pressing <kbd>C-c s C-h</kbd> lists all defined states with their
+keys, and marks the one you are in.
+
 ## General case
 
 If your workspace is not a simple file or if you want a different

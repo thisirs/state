@@ -309,6 +309,24 @@
                     (lookup-key state-prefix-map (vector event))
                     (format "%s is bound to the new state" key)))))
 
+(note "state-list-states")
+(assert-equal 'state-list-states (lookup-key state-prefix-map (kbd "C-h"))
+              "C-h after the prefix lists states")
+(let ((state--states (list (state--get-state-by-name 'switch-buf)
+                           (state--get-state-by-name 4))))
+  (with-current-buffer "*scratch*" (state-list-states))
+  (with-current-buffer "*States*"
+    (let ((lines (split-string (buffer-string) "\n" t)))
+      (assert-t (string-match-p "^\\* d +switch-buf" (nth 2 lines))
+                "current state listed and marked")
+      (assert-t (string-match-p "^  C-b +4 +1 +5$" (nth 1 lines))
+                "bound state listed with its origin and priority"))))
+(let ((state--states nil))
+  (state-list-states)
+  (assert-equal "No state defined.\n"
+                (with-current-buffer "*States*" (buffer-string))))
+(kill-buffer "*States*")
+
 (mapc #'kill-buffer (list prefix-sibling-buf prefix-dired-buf prefix-other-buf))
 (delete-directory prefix-root t)
 

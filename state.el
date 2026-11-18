@@ -493,10 +493,40 @@ under the key just pressed."
                  :switch ,(buffer-name))))
     (message "Undefined state")))
 
+(defun state-list-states ()
+  "Display all defined states and the keys that switch to them.
+The current state, if any, is marked with \"*\"."
+  (interactive)
+  (let ((current (ignore-errors (state--get-state-in)))
+        (states (sort (copy-sequence state--states)
+                      (lambda (a b)
+                        (string< (format "%s %s" (state-key a) (state-name a))
+                                 (format "%s %s" (state-key b) (state-name b)))))))
+    (with-help-window "*States*"
+      (if (not states)
+          (princ "No state defined.\n")
+        (princ (format "  %-10s %-24s %-16s %s\n"
+                       "Key" "State" "Bound to" "Priority"))
+        (dolist (state states)
+          (let ((bound (state-bound state))
+                (priority (state-priority state)))
+            (princ (format "%s %-10s %-24s %-16s %s\n"
+                           (if (eq state current) "*" " ")
+                           (state-key state)
+                           (state-name state)
+                           (cond ((null bound) "")
+                                 ((consp bound) "(form)")
+                                 (t bound))
+                           (if (eql priority state-min-priority)
+                               ""
+                             priority)))))))))
+
 ;;; Minor mode
 (defvar state-prefix-map
   (let ((keymap (make-sparse-keymap)))
     (define-key keymap [t] #'state-mode-default-state)
+    ;; The catch-all above would otherwise swallow the help key.
+    (define-key keymap (kbd "C-h") #'state-list-states)
     keymap)
   "Prefix map for state mode.")
 
