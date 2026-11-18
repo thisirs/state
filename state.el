@@ -233,14 +233,18 @@ pressing KEY."
   ;; Executes any other user defined "before" form
   (state-call from 'before)
 
-  (cond ((state-call to 'exist)
-         (state-call to 'switch)
-         (state-call to 'before))
-        (t
-         (state-call to 'create)
-         (unless (state-call to 'in)
-           (state-call to 'switch))
-         (state-call to 'before)))
+  ;; If TO exists but :switch did not land us in it (no layout saved yet
+  ;; because TO was started outside state, or the saved one shows killed
+  ;; buffers), create it as if it did not exist.  Otherwise :before below
+  ;; would save the wrong layout as TO's, and every later switch would
+  ;; restore it.
+  (unless (and (state-call to 'exist)
+               (progn (state-call to 'switch)
+                      (state-call to 'in)))
+    (state-call to 'create)
+    (unless (state-call to 'in)
+      (state-call to 'switch)))
+  (state-call to 'before)
   (state--message "Switched to `%s' state" (state-name to))
 
   ;; If keep in non-nil install transient keymap

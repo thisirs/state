@@ -217,7 +217,7 @@
            (lambda () state--default-state)))
   (let (flow)                            ;
     (state--do-switch (state-key exist-test-state))
-    (assert-equal '(Bexist Bswitch Bbefore) (reverse flow)))
+    (assert-equal '(Bexist Bswitch Bin Bbefore) (reverse flow)))
   (let (flow)
     (state--do-switch (state-key not-exist-in-state))
     (assert-equal '(Cexist Ccreate Cin Cbefore) (reverse flow)))
@@ -308,6 +308,30 @@
       (assert-equal (intern (format "state--switch-to-inline-%s" key))
                     (lookup-key state-prefix-map (vector event))
                     (format "%s is bound to the new state" key)))))
+
+(note "state--switch-to: existing state not reached by :switch")
+;; Like mu4e started outside state: it exists, but no layout is saved, so
+;; the default :switch does nothing.  We must still end up in it, and
+;; must not save the layout we came from as its own.
+(define-derived-mode fake-mail-mode special-mode "Mail")
+(eval '(state-define-state mail
+         :key "M"
+         :in (eq major-mode 'fake-mail-mode)
+         :exist (get-buffer "*fake-mail*")
+         :create (progn (switch-to-buffer (get-buffer-create "*fake-mail*"))
+                        (fake-mail-mode)))
+      t)
+(with-current-buffer (get-buffer-create "*fake-mail*") (fake-mail-mode))
+(let ((state--states (list (state--get-state-by-name 'mail))))
+  (switch-to-buffer prefix-other-buf)
+  (state--do-switch "M")
+  (assert-equal "*fake-mail*" (buffer-name (window-buffer))
+                "first switch reaches the existing state")
+  (state--do-switch "M")                ; back
+  (state--do-switch "M")                ; and again
+  (assert-equal "*fake-mail*" (buffer-name (window-buffer))
+                "later switches restore its layout, not the origin's"))
+(kill-buffer "*fake-mail*")
 
 (note "state-list-states")
 (assert-equal 'state-list-states (lookup-key state-prefix-map (kbd "C-h"))
