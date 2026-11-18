@@ -297,6 +297,18 @@
                 (error (car err)))
               "a user-error, not wrong-type-argument")
 
+(note "state-mode-default-state: hot-recording")
+(with-current-buffer prefix-other-buf
+  (dolist (event '(?x f5 32 1))         ; char, function key, SPC, C-a
+    (let ((last-input-event event)
+          (key (key-description (vector event))))
+      (assert-nil (condition-case err (progn (state-mode-default-state 1) nil)
+                    (error err))
+                  (format "hot-recording %s signals no error" key))
+      (assert-equal (intern (format "state--switch-to-inline-%s" key))
+                    (lookup-key state-prefix-map (vector event))
+                    (format "%s is bound to the new state" key)))))
+
 (mapc #'kill-buffer (list prefix-sibling-buf prefix-dired-buf prefix-other-buf))
 (delete-directory prefix-root t)
 

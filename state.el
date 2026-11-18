@@ -477,12 +477,19 @@ Store the current window configuration in the slot curent."
       (setf (state-current state) (current-window-configuration)))))
 
 (defun state-mode-default-state (&optional arg)
-  "Called when a keystroke is not bound to a state."
+  "Called when a keystroke is not bound to a state.
+
+With prefix argument ARG, define a state for the current buffer
+under the key just pressed."
   (interactive "P")
   (if arg
-      (eval `(state-define-state ,(format "inline-%S" last-input-event)
-               :key ,(char-to-string last-input-event)
-              :switch ,(buffer-name)))
+      ;; `key-description' handles function keys and SPC, which
+      ;; `char-to-string' and `kbd' respectively do not, and its output
+      ;; round-trips through `kbd'.
+      (let ((key (key-description (vector last-input-event))))
+        (eval `(state-define-state ,(format "inline-%s" key)
+                 :key ,key
+                 :switch ,(buffer-name))))
     (message "Undefined state")))
 
 ;;; Minor mode
