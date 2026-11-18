@@ -289,6 +289,14 @@
                 "switched to a buffer visiting the new file"))
 (kill-buffer (find-buffer-visiting new-file))
 
+(note "state--switch-back: origin state no longer exists")
+(setf (state-origin (state--get-state-by-name 'new-file)) 'vanished)
+(assert-equal 'user-error
+              (condition-case err
+                  (state--switch-back (state--get-state-by-name 'new-file))
+                (error (car err)))
+              "a user-error, not wrong-type-argument")
+
 (mapc #'kill-buffer (list prefix-sibling-buf prefix-dired-buf prefix-other-buf))
 (delete-directory prefix-root t)
 

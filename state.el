@@ -205,16 +205,21 @@ state."
 (defun state--switch-back (from)
   "Perform the actual switch back to state FROM."
   (state-call from 'before)
-  (let ((origin (state-origin from)))
-    (if (not origin)
-        (user-error "Not coming from anywhere")
-      (let ((wconf (state-current (state--get-state-by-name origin))))
+  (let* ((origin (state-origin from))
+         (origin-state (and origin (state--get-state-by-name origin))))
+    (cond
+     ((not origin)
+      (user-error "Not coming from anywhere"))
+     ((not origin-state)
+      (user-error "State `%s' no longer exists" origin))
+     (t
+      (let ((wconf (state-current origin-state)))
         (if (not (window-configuration-p wconf))
             (user-error "No wconf stored for `%s' state" origin)
           (set-window-configuration wconf)
           (if (eq origin 'default)
               (state--message "Back to default state")
-            (state--message "Back to `%s' state" origin)))))))
+            (state--message "Back to `%s' state" origin))))))))
 
 (defun state--switch-to (to from key)
   "Perform the actual switch to state TO coming from FROM by
