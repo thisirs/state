@@ -108,6 +108,8 @@
               (state-exist in-directory))
 (assert-equal '(state--exist-switch-buffer "*scratch*")
               (state-exist switch-buf))
+(assert-equal '(state--exist-switch-file "~/.emacs.d/init.el")
+              (state-exist switch-file))
 (assert-equal '(state--exist-in-file "in")
               (state-exist in-and-switch))
 
@@ -254,7 +256,17 @@
   (assert-nil (state--buffer-file-name-prefix-p prefix-other-buf prefix-proj)
               "buffer outside the prefix, seen from inside"))
 
-(mapc #'kill-buffer (list prefix-in-buf prefix-sibling-buf prefix-dired-buf prefix-other-buf))
+(note "state--exist-switch-file")
+(eval `(state-define-state exist-file :key "F"
+         :switch ,(concat prefix-proj "/f.txt"))
+      t)
+(assert-t (state-call (state--get-state-by-name 'exist-file) 'exist)
+          "exists while the file is visited")
+(kill-buffer prefix-in-buf)
+(assert-nil (state-call (state--get-state-by-name 'exist-file) 'exist)
+            "does not exist once the buffer is killed")
+
+(mapc #'kill-buffer (list prefix-sibling-buf prefix-dired-buf prefix-other-buf))
 (delete-directory prefix-root t)
 
 (end-tests)

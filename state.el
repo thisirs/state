@@ -400,6 +400,8 @@ they are strings. Otherwise leave nil."
   (cond (exist)
         ((stringp in)
          `(state--exist-in-file ,in))
+        ((and (stringp switch) (file-name-absolute-p switch))
+         `(state--exist-switch-file ,switch))
         ((stringp switch)
          `(state--exist-switch-buffer ,switch))))
 
@@ -408,6 +410,7 @@ they are strings. Otherwise leave nil."
               (buffer-list)))
 
 (fset 'state--exist-in-file 'state--find-file-name-prefix-buffer)
+(fset 'state--exist-switch-file 'find-buffer-visiting)
 (fset 'state--exist-switch-buffer 'get-buffer)
 
 (defun state--rewrite-switch (switch name in)
