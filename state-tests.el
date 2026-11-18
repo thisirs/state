@@ -223,4 +223,38 @@
     (state--do-switch (state-key not-exist-not-in-state))
     (assert-equal '(Dexist Dcreate Din Dswitch Dbefore) (reverse flow))))
 
+(note "state--buffer-file-name-prefix-p")
+;; Real files and buffers in a temp tree:  ROOT/proj/sub/, ROOT/proj/f.txt,
+;; ROOT/projbar/f.txt.
+(setq prefix-root (file-name-as-directory (make-temp-file "state-test" t)))
+(setq prefix-proj (concat prefix-root "proj"))
+(make-directory (concat prefix-proj "/sub") t)
+(make-directory (concat prefix-root "projbar") t)
+(write-region "" nil (concat prefix-proj "/f.txt"))
+(write-region "" nil (concat prefix-root "projbar/f.txt"))
+(setq prefix-in-buf (find-file-noselect (concat prefix-proj "/f.txt")))
+(setq prefix-sibling-buf (find-file-noselect (concat prefix-root "projbar/f.txt")))
+(setq prefix-dired-buf (dired-noselect (concat prefix-proj "/sub")))
+(setq prefix-other-buf (get-buffer-create "*state-test-other*"))
+(with-current-buffer prefix-other-buf (setq default-directory "/"))
+
+(assert-t (state--buffer-file-name-prefix-p prefix-in-buf prefix-proj)
+          "file inside the prefix directory")
+(assert-t (state--buffer-file-name-prefix-p prefix-in-buf
+                                             (concat prefix-proj "/f.txt"))
+          "file equal to the prefix")
+(assert-nil (state--buffer-file-name-prefix-p prefix-sibling-buf prefix-proj)
+            "/proj does not match /projbar/f.txt")
+;; Non-file buffers are judged by their own `default-directory', whatever
+;; the current buffer is.
+(with-current-buffer prefix-other-buf
+  (assert-t (state--buffer-file-name-prefix-p prefix-dired-buf prefix-proj)
+            "dired buffer inside the prefix, seen from outside"))
+(with-current-buffer prefix-dired-buf
+  (assert-nil (state--buffer-file-name-prefix-p prefix-other-buf prefix-proj)
+              "buffer outside the prefix, seen from inside"))
+
+(mapc #'kill-buffer (list prefix-in-buf prefix-sibling-buf prefix-dired-buf prefix-other-buf))
+(delete-directory prefix-root t)
+
 (end-tests)

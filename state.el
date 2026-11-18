@@ -368,14 +368,20 @@ they are strings. Otherwise leave nil."
          (error "No :in property or not able to infer one"))))
 
 (defun state--buffer-file-name-prefix-p (buf prefix)
-  "Return true if buffer BUF is visiting a file whose filename is
-prefixed by PREFIX. If no filename, use `default-directory' instead."
-  (string-prefix-p
-   (file-truename prefix)
-   (let ((bfn (or (buffer-file-name buf) default-directory "/")))
-     (if (file-remote-p bfn)
-         bfn
-         (file-truename bfn)))))
+  "Return non-nil if buffer BUF lies under PREFIX.
+
+BUF lies under PREFIX if the file it visits is PREFIX itself or is
+inside the directory PREFIX.  If BUF visits no file, use BUF's own
+`default-directory' instead."
+  (let* ((prefix (file-truename prefix))
+         (bfn (or (buffer-file-name buf)
+                  (buffer-local-value 'default-directory buf)
+                  "/"))
+         (bfn (if (file-remote-p bfn) bfn (file-truename bfn))))
+    ;; Compare on directory boundaries so that "/proj" does not match
+    ;; "/projbar/file".
+    (or (string= (directory-file-name prefix) (directory-file-name bfn))
+        (string-prefix-p (file-name-as-directory prefix) bfn))))
 
 (defun state--in-in-file (in)
   (state--buffer-file-name-prefix-p (current-buffer) in))
