@@ -290,11 +290,12 @@ current windows configuration.
 accessible from another state. It is the name of another state or
 a form to be called.
 
-:priority A number indicating the priority of a state when
-several states hold the same key. The state with the lowest
-priority is preferred. If several states have the same lowest
-priority, ask the user to choose. By convention, nil is of
-infinite priority.
+:priority A number arbitrating between bound states that hold the
+same key and are reachable from the current state.  The one with
+the lowest number is preferred; if several share it, ask the user
+to choose.  Omitting :priority gives `state-min-priority', i.e. the
+highest priority.  Unbound states ignore it: they are used only
+when no bound state matches, and the user chooses among them.
 
 :keep A form or function that is called if we keep pressing the
 key after switching. Leave nil is you don't want this feature."
