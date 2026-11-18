@@ -256,6 +256,15 @@
   (assert-nil (state--buffer-file-name-prefix-p prefix-other-buf prefix-proj)
               "buffer outside the prefix, seen from inside"))
 
+(note "state--buffer-file-name-prefix-p: remote names")
+;; Resolving a remote name with `file-truename' opens a connection.
+(let (truenamed)
+  (cl-letf (((symbol-function 'file-truename)
+             (lambda (f &rest _) (push f truenamed) f)))
+    (state--buffer-file-name-prefix-p prefix-other-buf "/ssh:nohost:/x"))
+  (assert-nil (member "/ssh:nohost:/x" truenamed)
+              "file-truename is not called on a remote prefix"))
+
 (note "state--exist-switch-file")
 (eval `(state-define-state exist-file :key "F"
          :switch ,(concat prefix-proj "/f.txt"))

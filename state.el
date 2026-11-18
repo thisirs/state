@@ -367,17 +367,22 @@ they are strings. Otherwise leave nil."
         ((null in)
          (error "No :in property or not able to infer one"))))
 
+(defun state--file-truename (file)
+  "Return the truename of FILE, or FILE itself if it is remote.
+Resolving a remote name would open a connection."
+  (if (file-remote-p file) file (file-truename file)))
+
 (defun state--buffer-file-name-prefix-p (buf prefix)
   "Return non-nil if buffer BUF lies under PREFIX.
 
 BUF lies under PREFIX if the file it visits is PREFIX itself or is
 inside the directory PREFIX.  If BUF visits no file, use BUF's own
 `default-directory' instead."
-  (let* ((prefix (file-truename prefix))
-         (bfn (or (buffer-file-name buf)
-                  (buffer-local-value 'default-directory buf)
-                  "/"))
-         (bfn (if (file-remote-p bfn) bfn (file-truename bfn))))
+  (let* ((prefix (state--file-truename prefix))
+         (bfn (state--file-truename
+               (or (buffer-file-name buf)
+                   (buffer-local-value 'default-directory buf)
+                   "/"))))
     ;; Compare on directory boundaries so that "/proj" does not match
     ;; "/projbar/file".
     (or (string= (directory-file-name prefix) (directory-file-name bfn))
